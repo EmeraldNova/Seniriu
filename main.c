@@ -11,16 +11,23 @@
 #include "game_object.h"
 #include "display.c"
 
-
 static int framenum = 0;
+static unsigned int old_tick = -1;
+static unsigned int tick = 0;
 static int last_create_frame = -9999;
 
 //  Handle Input from Gamepad
 void gamepad_input(void)
 {
     int delta[3] = {0,0,0};
+	int cam_pos_next[3];
 	int destroy_ID;
 	int wait_frames = 15;
+
+	//	Set next Camera position to current
+	cam_pos_next[0] = cam_pos[0];
+	cam_pos_next[1] = cam_pos[1];
+	cam_pos_next[2] = cam_pos[2];
 
 	if (!jo_is_pad1_available())
 		return ;
@@ -38,6 +45,9 @@ void gamepad_input(void)
 		{
 			last_create_frame = framenum;
 			create_object(cam_tar[0], cam_tar[1], cam_tar[2], metal_crate_1_v, metal_crate_1_q, 6);
+			object[num_object-1].x_size = 128;
+			object[num_object-1].y_size = 128;
+			object[num_object-1].z_size = 128;
 		}
 	}
 	if (jo_is_pad1_key_pressed(JO_KEY_B))
@@ -82,14 +92,24 @@ void gamepad_input(void)
         cam_angle[1] += 360;
 
     //  Fix Camera Position
-    cam_pos[0] += (delta[0]*jo_cos(cam_angle[1]) + delta[2]*jo_sin(cam_angle[1]))/32768;
-    cam_pos[1] += delta[1];
-    cam_pos[2] += (delta[2]*jo_cos(cam_angle[1]) - delta[0]*jo_sin(cam_angle[1]))/32768;
+    cam_pos_next[0] += (delta[0]*jo_cos(cam_angle[1]) + delta[2]*jo_sin(cam_angle[1]))/32768;
+    cam_pos_next[1] += delta[1];
+    cam_pos_next[2] += (delta[2]*jo_cos(cam_angle[1]) - delta[0]*jo_sin(cam_angle[1]))/32768;
+
+	//	Check Collision
+	bool colliding = is_colliding(cam_pos_next[0], cam_pos_next[1], cam_pos_next[2], 10, 10, 10);
+	jo_printf(0, 3, "Colliding:\t%d ",colliding);
+	if(!colliding)
+	{
+		cam_pos[0] = cam_pos_next[0];
+		cam_pos[1] = cam_pos_next[1];
+		cam_pos[2] = cam_pos_next[2];
+	}
 
     //  Fix Camera Target/Orientation
-    cam_tar[0] = (cam_pos[0]*32768 + 150*jo_sin(cam_angle[1]))/32768;
+    cam_tar[0] = (cam_pos[0]*32768 + 200*jo_sin(cam_angle[1]))/32768;
     cam_tar[1] = cam_pos[1];
-    cam_tar[2] = (cam_pos[2]*32768 + 150*jo_cos(cam_angle[1]))/32768;
+    cam_tar[2] = (cam_pos[2]*32768 + 200*jo_cos(cam_angle[1]))/32768;
 }
 
 //  Main Logic Loop
@@ -97,7 +117,11 @@ void main_loop(void)
 {
 	// Display frame number
 	framenum++;
-	jo_printf(0, 0, "Frame # %10d - Object # %10d", framenum%60 + 1, num_object);
+	old_tick = tick;
+	tick = jo_get_ticks();
+	float fps = 1000.0/(tick - old_tick);
+	jo_printf(0, 0, "FPS:%3.2f - Object # %10d", fps, num_object);
+	jo_printf(0, 1, "Camera Position:%7d,%7d,%7d ", cam_pos[0], cam_pos[1], cam_pos[2]);
 	
     //  Apply object speeds for animation
 	int index;

@@ -29,6 +29,16 @@ typedef struct {
 	int vrx;
     int vry;
     int vrz;
+	
+	//  Set Scale
+	int sx;
+	int sy;
+	int sz;
+		
+	//  Set Size (Hitboxes)
+	int x_size;
+	int y_size;
+	int z_size;
 
     //  3D Components
     jo_vertice* vertices;
@@ -75,6 +85,16 @@ void create_object(int x, int y, int z, jo_vertice* v, jo_3d_quad* q, int num_qu
 		object[num_object-1].vrx = 0;
 		object[num_object-1].vry = 0;
 		object[num_object-1].vrz = 0;
+		
+		//  Set Scale
+		object[num_object-1].sx = 1;
+		object[num_object-1].sy = 1;
+		object[num_object-1].sz = 1;
+		
+		//  Set Size (Hitboxes)
+		object[num_object-1].x_size = -1;
+		object[num_object-1].y_size = -1;
+		object[num_object-1].z_size = -1;
 
 		//  Set quads and vertices
 		object[num_object-1].vertices = v;
@@ -147,5 +167,49 @@ int closest_object(int x, int y, int z, int threshold)
 	}
 	
 	return closest_ID;
+}
+
+//	Basic bounding box colission
+bool is_colliding(int x, int y, int z, int x_size, int y_size, int z_size)
+{
+	int index;
+	int x_collide = false;
+	int y_collide = false;
+	int z_collide = false;
+
+	for(index = 0; index < num_object; index++)
+	{
+		//	Reset values
+		x_collide = false;
+		y_collide = false;
+		z_collide = false;
+		
+		//	Check x
+		if(object[index].sx >= 0 && (JO_ABS(x-object[index].x) < (object[index].x_size*object[index].sx + x_size)/2))
+		{
+			x_collide = true;
+		}
+		
+		//	Check y
+		if(object[index].sy >= 0 && (JO_ABS(y-object[index].y) < (object[index].y_size*object[index].sy + y_size)/2))
+		{
+			y_collide = true;
+		}
+		
+		//	Check z
+		if(object[index].sz >= 0 && (JO_ABS(z-object[index].z) < (object[index].z_size*object[index].sz + z_size)/2))
+		{
+			z_collide = true;
+		}
+		
+		jo_printf(0, 2, "Collisions:\t%d\t%d\t%d ",(int) x_collide, (int) y_collide, (int) z_collide);
+		
+		//	Return if colliding
+		if(x_collide && y_collide && z_collide)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 #endif
