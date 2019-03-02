@@ -5,150 +5,166 @@
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
 */
+/*
+** Jo Sega Saturn Engine
+** Copyright (c) 2012-2017, Johannes Fetz (johannesfetz@gmail.com)
+** All rights reserved.
+**
+** Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are met:
+**     * Redistributions of source code must retain the above copyright
+**       notice, this list of conditions and the following disclaimer.
+**     * Redistributions in binary form must reproduce the above copyright
+**       notice, this list of conditions and the following disclaimer in the
+**       documentation and/or other materials provided with the distribution.
+**     * Neither the name of the Johannes Fetz nor the
+**       names of its contributors may be used to endorse or promote products
+**       derived from this software without specific prior written permission.
+**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+** ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+** WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+** DISCLAIMED. IN NO EVENT SHALL Johannes Fetz BE LIABLE FOR ANY
+** DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+** (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+** LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+** ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+** SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #include <jo/jo.h>
-#include "templates.h"
-#include "game_object.h"
-#include "display.c"
+#include "ZT/ZT_COMMON.h"
 
+#include "input.h"
+#include "game_object.h"
 
 static int framenum = 0;
+static Uint8 old_tick = 0;
+static Uint8 tick = 0;
 static int last_create_frame = -9999;
 
-//  Handle Input from Gamepad
-void gamepad_input(void)
+/**Functions/variables added by XL2 **/
+/**Added by XL2 to use my own CD loading functions**/
+#define     OPEN_MAX    (Sint32)5
+#define     DIR_MAX     (Sint32)25
+GfsDirTbl gfsDirTbl;
+GfsDirName gfsDirName[DIR_MAX];
+Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
+Sint32 gfsDirN;
+
+//	File access with calls to SGL structs and definitions
+void ztCDinit(void)
 {
-    int delta[3] = {0,0,0};
-	int destroy_ID;
-	int wait_frames = 15;
+    GFS_DIRTBL_TYPE(&gfsDirTbl) = GFS_DIR_NAME;
+    GFS_DIRTBL_DIRNAME(&gfsDirTbl) = gfsDirName;
+    GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;
+    gfsDirN = GFS_Init(OPEN_MAX, gfsLibWork, &gfsDirTbl);
+}
 
-	if (!jo_is_pad1_available())
-		return ;
-	if (jo_is_pad1_key_pressed(JO_KEY_UP))
-		delta[2] = 5;
-	if (jo_is_pad1_key_pressed(JO_KEY_DOWN))
-		delta[2] = -5;
-    if (jo_is_pad1_key_pressed(JO_KEY_LEFT))
-		delta[0] = -5;
-	if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
-		delta[0] = 5;
-	if (jo_is_pad1_key_pressed(JO_KEY_A))
-	{
-		if(framenum > last_create_frame + wait_frames)
-		{
-			last_create_frame = framenum;
-			create_object(cam_tar[0], cam_tar[1], cam_tar[2], metal_crate_1_v, metal_crate_1_q, 6);
-		}
-	}
-	if (jo_is_pad1_key_pressed(JO_KEY_B))
-	{
-		;
-	}
-    if (jo_is_pad1_key_pressed(JO_KEY_C))
-		delta[1] = 5;
-	if (jo_is_pad1_key_pressed(JO_KEY_X))
-	{
-		if(framenum > last_create_frame + wait_frames)
-		{
-			destroy_ID = closest_object(cam_tar[0], cam_tar[1], cam_tar[2], 50);
-			if(destroy_ID != -1)
-			{
-				destroy_object(destroy_ID);
-			}
-		}
-	}
-	if (jo_is_pad1_key_pressed(JO_KEY_Y))
-		;
-	if (jo_is_pad1_key_pressed(JO_KEY_Z))
-		delta[1] = -5;	
-	if (jo_is_pad1_key_pressed(JO_KEY_L))
-		cam_angle[1] -= 1;
-	if (jo_is_pad1_key_pressed(JO_KEY_R))
-		cam_angle[1] += 1;
-    if (jo_is_pad1_key_pressed(JO_KEY_START))
+//	Framerate definitions (different integer types for different context)
+extern Sint8 SynchConst;
+Sint32 framerate;
+/****/
+
+
+/**Added by XL2 - Very basic function to display a 3D model **/
+void display_model(entity_t * model)
+{
+    int i;
+    for (i=0; i<model->nbMeshes; i++)
     {
-        cam_pos[0] = 0;
-        cam_pos[1] = 0;
-        cam_pos[2] = 0;
-        cam_angle[0] = 0;
-        cam_angle[1] = 0;
-        cam_angle[2] = 0;
+	   slPutPolygon((PDATA*)model->pol[i]);
     }
+}
+/**End of added functions and global variables**/
 
-    //  Bound Camera Angle
-    if (cam_angle[1] > 180)
-        cam_angle[1] -= 360;
-    else if (cam_angle[1] <= -180)
-        cam_angle[1] += 360;
+//	Number of models to load
+Uint32 nbModels = 1;
 
-    //  Fix Camera Position
-    cam_pos[0] += (delta[0]*jo_cos(cam_angle[1]) + delta[2]*jo_sin(cam_angle[1]))/32768;
-    cam_pos[1] += delta[1];
-    cam_pos[2] += (delta[2]*jo_cos(cam_angle[1]) - delta[0]*jo_sin(cam_angle[1]))/32768;
+//	Load 3D object
+void load_ref(void){
+    /**ZTP stands for Z-Treme polygonal model**/
+    void * currentAddress = (void*)LWRAM;
+	currentAddress = ztLoad3Dmodel((Sint8*)"WCHAIR.ZTP", currentAddress, &entities[0], false);
+}
 
-    //  Fix Camera Target/Orientation
-    cam_tar[0] = (cam_pos[0]*32768 + 150*jo_sin(cam_angle[1]))/32768;
-    cam_tar[1] = cam_pos[1];
-    cam_tar[2] = (cam_pos[2]*32768 + 150*jo_cos(cam_angle[1]))/32768;
+//	Drawing objects (every frame)
+void my_draw(void)
+{
+	for(int ind = 0; ind < num_object; ind++)
+	{
+		slPushMatrix();		//	Advance matrix buffer pointer 1 step
+
+		//	Rotate draw location
+		slRotY(object[ind].theta[Y] - theta[Y]);	
+		//	Translate draw location
+		slTranslate(object[ind].position[X] - position[X],
+			object[ind].position[Y] - position[Y],
+			object[ind].position[Z] - position[Z]);		
+		//	Sets scale of 3D draw, larger numbers draw bigger		
+		slScale(object[ind].scale[X],object[ind].scale[Y],
+			object[ind].scale[Z]);	
+	
+		display_model(object[ind].entity);				//	Displays model
+		//display_model(&entities[0]);				//	Displays model
+		slPopMatrix();		//	Return matrix buffer pointer back 1 step
+	}
+
+	//	Print polygon info
+	//slPrintFX(toFIXED(jo_3d_get_polygon_count()), slLocate(0,1));
+    //slPrintFX(toFIXED(jo_3d_get_vertices_count()), slLocate(0,2));
+    //slPrintFX(toFIXED(jo_3d_get_displayed_polygon_count()), slLocate(0,3));
+	//slPrintFX(toFIXED(framerate), slLocate(0,4));
+
+    return;
 }
 
 //  Main Logic Loop
 void main_loop(void)
 {
-	// Display frame number
-	framenum++;
-	jo_printf(0, 0, "Frame # %10d - Object # %10d", framenum%60 + 1, num_object);
-	
-    //  Apply object speeds for animation
-	int index;
-	for( index = 0; index < num_object; index++ )
+	while(1)
 	{
-		// Increment by velocity
-		object[index].x += object[index].vx;
-		object[index].y += object[index].vy;
-		object[index].z += object[index].vz;
+		//	Pop matrix to unit matrix at pointer '0'
+		slUnitMatrix(0);	
+
+		slPrintFX(toFIXED(num_object),slLocate(30,0));
+
+		//  Handle Input
+		gamepad_input();
+		forward_target(tar_dist);
+
+		//	Print Orientation Data
+		print_orientation();
+
+		//  Draw Objects
+		my_draw();
 		
-		// Increment by rotational speed
-		object[index].rx += object[index].vrx;
-		object[index].ry += object[index].vry;
-		object[index].rz += object[index].vrz;
+		//	Force screen blanking to wait until events are done processing
+		slSynch();			
 	}
-
-    //  Handle Input
-    gamepad_input();
-
-	// Move Camera according to position & target
-    move_cam();
-
-    //  Draw Objects
-    my_draw();
 }
 
 void jo_main(void)
 {
-    //  Initialize engine with black background
-	jo_core_init(JO_COLOR_Black);
+	//  Initialize engine with black background
+	jo_core_init(JO_COLOR_Black);	
 
-	//  Initialize camera
-    start_cam();
+	//	Added by XL2 
+	fadeOut(true);			//	Fade out screen and blank background
+    SynchConst = (Sint8)1; 	//	Framerate control. 1/60 = 60 FPS, 2/60 = 30 FPS, etc.
+	framerate = 1;			//	Repeat framerate definition
+	slZdspLevel(7);			//	Define frustrum culling near plane
+    /****/
 
-    //  Initialize Templates
-    initilize_geo("metal_crate_1");
+	/**XL2**/
+	ztCDinit(); 	//	Prepare file system for loading things in directory
+	load_ref();		//	Load 3D Object
+	slScrAutoDisp(NBG0ON | NBG1ON | NBG3ON | SPRON);	//	?
 
-    //  Create cube
-    //create_cube(&objects[0], -200, 0, 500, 20, 45, 0, metal_crate_1_v, metal_crate_1_q);
-    //create_cube(&objects[1], 0, 0, 500, 20, 45, 0, metal_crate_1_v, metal_crate_1_q);
-    //create_cube(&objects[2], 200, 0, 500, 20, 45, 0, metal_crate_1_v, metal_crate_1_q);
-    //create_cube(&objects[3], 0, 0, -500, 20, 45, 0, metal_crate_1_v, metal_crate_1_q);
+	fadeIn();	//	Smooth background fade in
 
-	//	Set Rotations for cubes
-	//objects[0].vrx = 1;
-	//objects[1].vry = 1;
-	//objects[2].vrz = 1;
+	slPrint("Go!",slLocate(19,0));
 
-    //  Set main loop
-	jo_core_add_callback(main_loop);
-
-	//  Start game
-	jo_core_run();
+	main_loop();	//	Main loop of game
 }

@@ -15,7 +15,7 @@ static jo_camera cam;
 //  Initialize Camera Positional Variables
 static int cam_pos[3] = {0,0,0};
 static int cam_angle[3] = {0,0,0};
-static int cam_tar[3] = {0,0,1};
+static int cam_tar[3] = {0,0,200};
 
 //	Camera Initializtion function to be run on startup
 void start_cam(void)
