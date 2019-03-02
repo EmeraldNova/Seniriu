@@ -89,7 +89,12 @@ void clone_object(int ID, int destination)
 //	Destroy Object
 void destroy_object(int ID)
 {
-	if(num_object > 0)
+	//	Return if nonsensical ID
+	if(ID >= num_object || ID < 0 || num_object <= 0)
+	{
+		return;
+	}
+	else
 	{
 		// Clone last object into destroyed object's lcoation
 		clone_object(num_object-1, ID);

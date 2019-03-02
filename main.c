@@ -1,6 +1,6 @@
 /*
 ** Seniriu
-** Matthew Suttinger & Emerald Nova (johannesfetz@gmail.com)
+** Matthew Suttinger & Emerald Nova ()
 ** 
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
@@ -42,7 +42,7 @@
 static int framenum = 0;
 static Uint8 old_tick = 0;
 static Uint8 tick = 0;
-static int last_create_frame = -9999;
+
 
 /**Functions/variables added by XL2 **/
 /**Added by XL2 to use my own CD loading functions**/
@@ -125,6 +125,10 @@ void main_loop(void)
 {
 	while(1)
 	{
+		//	Time
+		//next_frame();
+		
+		
 		//	Pop matrix to unit matrix at pointer '0'
 		slUnitMatrix(0);	
 
@@ -156,6 +160,9 @@ void jo_main(void)
 	framerate = 1;			//	Repeat framerate definition
 	slZdspLevel(7);			//	Define frustrum culling near plane
     /****/
+	
+	//	Add time polling callback
+	slIntFunction(poll_HighFreq);
 
 	/**XL2**/
 	ztCDinit(); 	//	Prepare file system for loading things in directory

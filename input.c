@@ -10,6 +10,7 @@
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 #include "game_object.h"
+#include "timer.h"
 
 //	Orientation data
 //	Camera angle away from -Z
@@ -20,18 +21,14 @@ FIXED height = toFIXED(14.0);
 FIXED position[XYZ] = {toFIXED(0.0),toFIXED(14.0),toFIXED(0.0)};				
 //	Default interaction target distance
 FIXED tar_dist = toFIXED(500.0);	
+//	Distance from target allow for interaction
+FIXED tar_sense = toFIXED(100.0);	
 //	Interaction target position
 FIXED target[XYZ] = {toFIXED(0.0),toFIXED(0.0),toFIXED(500.0)};
 
-//	Retrieve current time in milliseconds
-/*
-Uint8 get_time(void)
-{
-	//	TODO:
-	//	Can't use without SBL. Figure out where time is stored in memory and call
-	return &(PER_GET_TIM());		
-}
-*/
+//	Repeat Input Delay
+FIXED input_delay = toFIXED(0.2);
+FIXED last_input = toFIXED(-1.0);;
 
 //	Add relative change to position coordinate
 void add_rel_pos(FIXED x, FIXED y, FIXED z)
@@ -59,12 +56,19 @@ void gamepad_input(void)
 {
 	int wait_frames = 15;
 
+	//	Poll for gamepad
 	if (!jo_is_pad1_available())
 		return ;
+	
+	//	Directional
 	if (jo_is_pad1_key_pressed(JO_KEY_UP))
 		add_rel_pos(toFIXED(0.0),toFIXED(0.0),toFIXED(10.0));
     if (jo_is_pad1_key_pressed(JO_KEY_DOWN))
 		add_rel_pos(toFIXED(0.0),toFIXED(0.0),toFIXED(-10.0));
+	if (jo_is_pad1_key_pressed(JO_KEY_LEFT))
+		add_rel_pos(toFIXED(-10.0),toFIXED(0.0),toFIXED(0.0));
+    if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
+		add_rel_pos(toFIXED(10.0),toFIXED(0.0),toFIXED(0.0));
     if (jo_is_pad1_key_pressed(JO_KEY_L))
 		theta[Y] -= (DEGtoANG(1.0));
     if (jo_is_pad1_key_pressed(JO_KEY_R))
@@ -73,32 +77,42 @@ void gamepad_input(void)
 		add_rel_pos(toFIXED(0.0),toFIXED(-10.0),toFIXED(0.0));
     if (jo_is_pad1_key_pressed(JO_KEY_C))
 		add_rel_pos(toFIXED(0.0),toFIXED(10.0),toFIXED(0.0));
-	if (jo_is_pad1_key_pressed(JO_KEY_LEFT))
-		add_rel_pos(toFIXED(-10.0),toFIXED(0.0),toFIXED(0.0));
-    if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
-		add_rel_pos(toFIXED(10.0),toFIXED(0.0),toFIXED(0.0));
-	if (jo_is_pad1_key_pressed(JO_KEY_A))
-		create_object(target[X], target[Y], target[Z], theta[X], theta[Y], theta[Z], &entities[0]);
-	if (jo_is_pad1_key_pressed(JO_KEY_B))
-		destroy_object(closest_object(target[X], target[Y], target[Z],
-			toFIXED(tar_dist)));
+	
+	//	Button Presses
+	if(time > last_input + input_delay)
+	{
+		if (jo_is_pad1_key_pressed(JO_KEY_A))
+			create_object(target[X], target[Y], target[Z], theta[X], theta[Y], theta[Z], &entities[0]);
+		if (jo_is_pad1_key_pressed(JO_KEY_B))
+		{
+			destroy_object(closest_object(target[X], target[Y], target[Z], tar_sense));
+		}
+				
+		//	Set last input time
+		last_input = time;
+	}
 }
+
 
 //	Prints orientation data on screen
 void print_orientation(void)
 {
-	slPrint("  Position     Rotation      Target   ",slLocate(0,1));
+	//	Timer
+	slPrint("Time:",slLocate(0,1));
+	slPrintFX(time,slLocate(6,1));
+	
+	slPrint("  Position     Rotation      Target   ",slLocate(0,2));
 	//	Position
-	slPrintFX(position[X],slLocate(0,2));
-	slPrintFX(position[Y],slLocate(0,3));
-	slPrintFX(position[Z],slLocate(0,4));
+	slPrintFX(position[X],slLocate(0,3));
+	slPrintFX(position[Y],slLocate(0,4));
+	slPrintFX(position[Z],slLocate(0,5));
 	//	Rotation
-	slPrintFX(slAng2FX(theta[X]),slLocate(13,2));
-	slPrintFX(slAng2FX(theta[Y]),slLocate(13,3));
-	slPrintFX(slAng2FX(theta[Z]),slLocate(13,4));
+	slPrintFX(slAng2FX(theta[X]),slLocate(13,3));
+	slPrintFX(slAng2FX(theta[Y]),slLocate(13,4));
+	slPrintFX(slAng2FX(theta[Z]),slLocate(13,5));
 	//	Target
-	slPrintFX(target[X],slLocate(26,2));
-	slPrintFX(target[Y],slLocate(26,3));
-	slPrintFX(target[Z],slLocate(26,4));
+	slPrintFX(target[X],slLocate(26,3));
+	slPrintFX(target[Y],slLocate(26,4));
+	slPrintFX(target[Z],slLocate(26,5));
 }
 
