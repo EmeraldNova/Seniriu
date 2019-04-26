@@ -14,8 +14,6 @@
 #define     returnCRAMaddr(n)   (CRAM_Base + (0x20 * n))
 #define     LUTcramIdx(n)       ((256 + (16 * n)))
 
-#define     LWRAM 0x00200000
-
 typedef struct
 {
     Uint16      width;
@@ -27,7 +25,7 @@ typedef struct
 
 #include "ZT_TOOLS.h"
 #include "ZT_LOAD_MODEL.h"
-
+#include "ZT_CD.h"
 
 
 #endif // ZT_COMMON_H

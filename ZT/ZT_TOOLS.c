@@ -228,3 +228,4 @@ FIXED CheckOnPlane(POINT camPt, POINT PlanePt1, VECTOR PlaneNormal)
 
     return slInnerProduct(ptVector, PlaneNormal);
 }
+

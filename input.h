@@ -1,6 +1,6 @@
 /*
 ** Seniriu
-** Matthew Suttinger & Emerald Nova (johannesfetz@gmail.com)
+** Matthew Suttinger & Emerald Nova (emeraldnovagames@gmail.com)
 ** 
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
@@ -27,6 +27,7 @@ extern FIXED input_delay;
 extern FIXED last_input;
 
 //Uint8 get_time(void);
+extern Sint8 SynchConst;
 void add_rel_pos(FIXED x, FIXED y, FIXED z);
 void gamepad_input(void);
 void print_orientation(void);

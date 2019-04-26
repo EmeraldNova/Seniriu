@@ -1,6 +1,6 @@
 /*
 ** Seniriu
-** Matthew Suttinger & Emerald Nova (johannesfetz@gmail.com)
+** Matthew Suttinger & Emerald Nova (emeraldnovagames@gmail.com)
 ** 
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
@@ -50,9 +50,9 @@ void create_object(FIXED x, FIXED y, FIXED z, FIXED rx, FIXED ry, FIXED rz, enti
 		object[num_object-1].omega[Z] = toFIXED(0.0);
 		
 		//  Set Scale
-		object[num_object-1].scale[X] = toFIXED(8.0);
-		object[num_object-1].scale[Y] = toFIXED(8.0);
-		object[num_object-1].scale[Z] = toFIXED(8.0);
+		object[num_object-1].scale[X] = toFIXED(1.0);
+		object[num_object-1].scale[Y] = toFIXED(1.0);
+		object[num_object-1].scale[Z] = toFIXED(1.0);
 		
 		//	Point to entity_t
 		object[num_object-1].entity = ent;

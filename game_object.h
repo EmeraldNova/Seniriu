@@ -1,6 +1,6 @@
 /*
 ** Seniriu
-** Matthew Suttinger & Emerald Nova (johannesfetz@gmail.com)
+** Matthew Suttinger & Emerald Nova (emeraldnovagames@gmail.com)
 ** 
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode

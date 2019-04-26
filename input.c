@@ -1,6 +1,6 @@
 /*
 ** Seniriu
-** Matthew Suttinger & Emerald Nova (johannesfetz@gmail.com)
+** Matthew Suttinger & Emerald Nova (emeraldnovagames@gmail.com)
 ** 
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
@@ -16,19 +16,20 @@
 //	Camera angle away from -Z
 ANGLE theta[XYZ] = {DEGtoANG(0.0),DEGtoANG(0.0),DEGtoANG(0.0)};
 //	Camera (player) height
-FIXED height = toFIXED(14.0);
+FIXED height = toFIXED(1.8);
 //	Camera Position
-FIXED position[XYZ] = {toFIXED(0.0),toFIXED(14.0),toFIXED(0.0)};				
+FIXED position[XYZ] = {toFIXED(0.0),toFIXED(1.8),toFIXED(0.0)};				
 //	Default interaction target distance
-FIXED tar_dist = toFIXED(500.0);	
+FIXED tar_dist = toFIXED(0.5);	
 //	Distance from target allow for interaction
-FIXED tar_sense = toFIXED(100.0);	
+FIXED tar_sense = toFIXED(0.25);	
 //	Interaction target position
-FIXED target[XYZ] = {toFIXED(0.0),toFIXED(0.0),toFIXED(500.0)};
+FIXED target[XYZ] = {toFIXED(0.0),toFIXED(0.0),toFIXED(0.5)};
 
 //	Repeat Input Delay
 FIXED input_delay = toFIXED(0.2);
 FIXED last_input = toFIXED(-1.0);;
+extern Sint8 SynchConst;
 
 //	Add relative change to position coordinate
 void add_rel_pos(FIXED x, FIXED y, FIXED z)
@@ -55,6 +56,7 @@ void forward_target(FIXED dist)
 void gamepad_input(void)
 {
 	int wait_frames = 15;
+	FIXED move_inc = toFIXED(0.1);
 
 	//	Poll for gamepad
 	if (!jo_is_pad1_available())
@@ -62,21 +64,21 @@ void gamepad_input(void)
 	
 	//	Directional
 	if (jo_is_pad1_key_pressed(JO_KEY_UP))
-		add_rel_pos(toFIXED(0.0),toFIXED(0.0),toFIXED(10.0));
+		add_rel_pos(toFIXED(0.0),toFIXED(0.0),move_inc);
     if (jo_is_pad1_key_pressed(JO_KEY_DOWN))
-		add_rel_pos(toFIXED(0.0),toFIXED(0.0),toFIXED(-10.0));
+		add_rel_pos(toFIXED(0.0),toFIXED(0.0),-move_inc);
 	if (jo_is_pad1_key_pressed(JO_KEY_LEFT))
-		add_rel_pos(toFIXED(-10.0),toFIXED(0.0),toFIXED(0.0));
+		add_rel_pos(-move_inc,toFIXED(0.0),toFIXED(0.0));
     if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
-		add_rel_pos(toFIXED(10.0),toFIXED(0.0),toFIXED(0.0));
+		add_rel_pos(move_inc,toFIXED(0.0),toFIXED(0.0));
     if (jo_is_pad1_key_pressed(JO_KEY_L))
 		theta[Y] -= (DEGtoANG(1.0));
     if (jo_is_pad1_key_pressed(JO_KEY_R))
 		theta[Y] += (DEGtoANG(1.0));
 	if (jo_is_pad1_key_pressed(JO_KEY_Z))
-		add_rel_pos(toFIXED(0.0),toFIXED(-10.0),toFIXED(0.0));
+		add_rel_pos(toFIXED(0.0),-move_inc,toFIXED(0.0));
     if (jo_is_pad1_key_pressed(JO_KEY_C))
-		add_rel_pos(toFIXED(0.0),toFIXED(10.0),toFIXED(0.0));
+		add_rel_pos(toFIXED(0.0),move_inc,toFIXED(0.0));
 	
 	//	Button Presses
 	if(time > last_input + input_delay)
@@ -86,6 +88,18 @@ void gamepad_input(void)
 		if (jo_is_pad1_key_pressed(JO_KEY_B))
 		{
 			destroy_object(closest_object(target[X], target[Y], target[Z], tar_sense));
+		}
+		if (jo_is_pad1_key_pressed(JO_KEY_X))
+		{
+			//	Iterate framerate
+			if (SynchConst == 1 )
+			{
+				SynchConst = (Sint8)3;
+			}
+			else
+			{
+				SynchConst -= (Sint8)1;
+			}
 		}
 				
 		//	Set last input time
@@ -100,6 +114,8 @@ void print_orientation(void)
 	//	Timer
 	slPrint("Time:",slLocate(0,1));
 	slPrintFX(time,slLocate(6,1));
+	slPrint("Framerate:",slLocate(19,1));
+	jo_printf(30,1,"%i FPS",(60/SynchConst));
 	
 	slPrint("  Position     Rotation      Target   ",slLocate(0,2));
 	//	Position

@@ -1,6 +1,6 @@
 /*
 ** Seniriu
-** Matthew Suttinger & Emerald Nova ()
+** Matthew Suttinger & Emerald Nova (emeraldnovagames@gmail.com)
 ** 
 ** This work is licensed under a Attribution-NonCommercial 4.0 International License
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
@@ -86,7 +86,7 @@ Uint32 nbModels = 1;
 void load_ref(void){
     /**ZTP stands for Z-Treme polygonal model**/
     void * currentAddress = (void*)LWRAM;
-	currentAddress = ztLoad3Dmodel((Sint8*)"WCHAIR.ZTP", currentAddress, &entities[0], false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"TESTBOX.ZTP", currentAddress, &entities[0], false);
 }
 
 //	Drawing objects (every frame)
@@ -126,8 +126,7 @@ void main_loop(void)
 	while(1)
 	{
 		//	Time
-		//next_frame();
-		
+		timer();
 		
 		//	Pop matrix to unit matrix at pointer '0'
 		slUnitMatrix(0);	
@@ -136,6 +135,7 @@ void main_loop(void)
 
 		//  Handle Input
 		gamepad_input();
+		framerate = (int)SynchConst;
 		forward_target(tar_dist);
 
 		//	Print Orientation Data
@@ -162,7 +162,7 @@ void jo_main(void)
     /****/
 	
 	//	Add time polling callback
-	slIntFunction(poll_HighFreq);
+	//slIntFunction(timer);
 
 	/**XL2**/
 	ztCDinit(); 	//	Prepare file system for loading things in directory
