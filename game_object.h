@@ -12,6 +12,7 @@
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 #include "input.h"
+#include "timer.h"
 
 //  Game Object containing necessary items for rendering
 typedef struct {
@@ -26,7 +27,7 @@ typedef struct {
 	// Velocity
 	FIXED velocity[XYZ];
     // Rotation
-	FIXED theta[XYZ];
+	ANGLE theta[XYZ];
 	// Rotation Speed
 	FIXED omega[XYZ];
 	//  Set Scale
@@ -39,14 +40,18 @@ typedef struct {
 //  Array of game objects
 extern int max_objects;
 int num_object;
-game_object object[100];	//	Same as max objects
+game_object object[200];	//	Same as max objects
 
 
 //	Functions
-void create_object(FIXED x, FIXED y, FIXED z, FIXED rx, FIXED ry, FIXED rz, entity_t *ent);
+void stop(int ID);
+void create_object(FIXED position[XYZ], ANGLE rot[XYZ], entity_t *ent);
 void clone_object(int ID, int destination);
 void destroy_object(int ID);
 int closest_object(FIXED x, FIXED y, FIXED z, FIXED threshold);
 bool is_colliding(int x, int y, int z, int x_size, int y_size, int z_size);
+void apply_accel(int ID, FIXED accel[XYZ]);
+void apply_accel_all(FIXED accel[XYZ]);
+void update_obj_position(void);
 
 #endif

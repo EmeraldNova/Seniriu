@@ -9,14 +9,24 @@
 #include "game_object.h"
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "input.h"
+#include "timer.h"
 
 //  Array of game objects
-int max_objects = 100;
+int max_objects = 200;
 int num_object = 0;
-game_object object[100];	//	Same as max objects
+game_object object[200];	//	Same as max objects
+
+//	Stops game object
+void stop(int ID)
+{
+	object[ID].velocity[X] = 0;
+	object[ID].velocity[Y] = 0;
+	object[ID].velocity[Z] = 0;
+}
 
 //	Creates a game_object and add it to the objects array
-void create_object(FIXED x, FIXED y, FIXED z, FIXED rx, FIXED ry, FIXED rz, entity_t *ent)
+void create_object(FIXED position[XYZ], ANGLE rot[XYZ], entity_t *ent)
 {
 	if(num_object < max_objects)
 	{
@@ -30,29 +40,29 @@ void create_object(FIXED x, FIXED y, FIXED z, FIXED rx, FIXED ry, FIXED rz, enti
 		object[num_object-1].alive = true;
 
 		//  Set Position
-		object[num_object-1].position[X] = x;
-		object[num_object-1].position[Y] = y;
-		object[num_object-1].position[Z] = z;
+		object[num_object-1].position[X] = position[X];
+		object[num_object-1].position[Y] = position[Y];
+		object[num_object-1].position[Z] = position[Z];
 		
 		//  Set Velocity
-		object[num_object-1].velocity[X] = toFIXED(0.0);
-		object[num_object-1].velocity[Y] = toFIXED(0.0);
-		object[num_object-1].velocity[Z] = toFIXED(0.0);
+		object[num_object-1].velocity[X] = 0;
+		object[num_object-1].velocity[Y] = 0;
+		object[num_object-1].velocity[Z] = 0;
 
 		//  Set Rotation
-		object[num_object-1].theta[X] = rx;
-		object[num_object-1].theta[Y] = ry;
-		object[num_object-1].theta[Z] = rz;
+		object[num_object-1].theta[X] = rot[X];
+		object[num_object-1].theta[Y] = rot[Y];
+		object[num_object-1].theta[Z] = rot[Z];
 		
 		//  Set Rotation Speed
-		object[num_object-1].omega[X] = toFIXED(0.0);
-		object[num_object-1].omega[Y] = toFIXED(0.0);
-		object[num_object-1].omega[Z] = toFIXED(0.0);
+		object[num_object-1].omega[X] = 0;
+		object[num_object-1].omega[Y] = 0;
+		object[num_object-1].omega[Z] = 0;
 		
 		//  Set Scale
-		object[num_object-1].scale[X] = toFIXED(1.0);
-		object[num_object-1].scale[Y] = toFIXED(1.0);
-		object[num_object-1].scale[Z] = toFIXED(1.0);
+		object[num_object-1].scale[X] = 1 << 16;
+		object[num_object-1].scale[Y] = 1 << 16;
+		object[num_object-1].scale[Z] = 1 << 16;
 		
 		//	Point to entity_t
 		object[num_object-1].entity = ent;
@@ -124,6 +134,54 @@ int closest_object(FIXED x, FIXED y, FIXED z, FIXED threshold)
 	}
 	
 	return closest_ID;
+}
+
+//	Applies an acceleration on an object
+void apply_accel(int ID, FIXED accel[XYZ])
+{	
+	//	Change velocities
+	object[ID].velocity[X] = object[ID].velocity[X] + slMulFX(dt,accel[X]);
+	object[ID].velocity[Z] = object[ID].velocity[Z] + slMulFX(dt,accel[Z]);
+	
+	//	Remove y acceleration if on floor
+	if(object[ID].position[Y] < 0)
+	{
+		object[ID].velocity[Y] = object[ID].velocity[Y] + slMulFX(dt,accel[Y]);
+	}
+	
+	return;
+}
+
+//	Applies an acceleration to all objects
+void apply_accel_all(FIXED accel[XYZ])
+{
+	for(int ID = 0; ID < num_object; ID++)
+	{
+		apply_accel(ID, accel);	
+	}
+	
+	return;
+}
+
+//	Update all obejct positiosn based on velocities
+void update_obj_position(void)
+{
+	for(int ID = 0; ID < num_object; ID++)
+	{
+		//	Update object position
+		object[ID].position[X] = object[ID].position[X] + slMulFX(dt,object[ID].velocity[X]);
+		object[ID].position[Y] = object[ID].position[Y] + slMulFX(dt,object[ID].velocity[Y]);
+		object[ID].position[Z] = object[ID].position[Z] + slMulFX(dt,object[ID].velocity[Z]);
+
+		//	Floor is 0
+		if(object[ID].position[Y] >= 0)
+		{
+			object[ID].position[Y] = 0;
+			object[ID].velocity[Y] = 0;
+		}
+	}
+	
+	return;
 }
 
 /*

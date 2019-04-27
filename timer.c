@@ -19,19 +19,10 @@ volatile Uint8 * SH2TCR = (volatile Uint8 *)0xfffffe16;
 // System clock
 volatile unsigned int * SysClockReg = (volatile unsigned int*)0x6000324;
 //	Time tracking in seconds
-FIXED time = toFIXED(0.0);
-FIXED oldtime = toFIXED(0.0);
+FIXED time = 0;
+FIXED oldtime = 0;
+FIXED dt = 0;
 static Uint16 delta_time = 1;
-
-//	Get high frequency count from chip and translate to seconds
-/*
-void poll_HighFreq(void)
-{
-	oldtime = time;
-	//	7680 = 30 (correction factor) * 256 (Uint8 range)
-	time += slDivFX(toFIXED(7680.0),toFIXED(*SH2FRCHigh));
-}
-*/
 
 //	JO Engine sourced timer adaptation
 void timer(void)
@@ -60,7 +51,7 @@ void timer(void)
 
 	//	Set new time
 	time += time_add;
-	//time = jo_get_ticks();
+	dt = time - oldtime;
 	
 	//	Reset FRC's
 	(*(volatile unsigned char *)SH2FRCHigh) = 0 >> 8;

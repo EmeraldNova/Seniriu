@@ -23,6 +23,7 @@ volatile unsigned int * SysClockReg;
 //	Time tracking in seconds
 FIXED time;
 FIXED oldtime;
+FIXED dt;
 
 //	Functions
 //void poll_HighFreq(void);

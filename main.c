@@ -38,6 +38,7 @@
 
 #include "input.h"
 #include "game_object.h"
+#include "collision.h"
 
 static int framenum = 0;
 static Uint8 old_tick = 0;
@@ -87,6 +88,7 @@ void load_ref(void){
     /**ZTP stands for Z-Treme polygonal model**/
     void * currentAddress = (void*)LWRAM;
 	currentAddress = ztLoad3Dmodel((Sint8*)"TESTBOX.ZTP", currentAddress, &entities[0], false);
+	r_radius[0] = calc_rough_radius(&entities[0]);
 }
 
 //	Drawing objects (every frame)
@@ -96,18 +98,19 @@ void my_draw(void)
 	{
 		slPushMatrix();		//	Advance matrix buffer pointer 1 step
 
-		//	Rotate draw location
-		slRotY(object[ind].theta[Y] - theta[Y]);	
+		//	Rotate perspective 
+			slRotY(-theta[Y]);	
 		//	Translate draw location
-		slTranslate(object[ind].position[X] - position[X],
-			object[ind].position[Y] - position[Y],
-			object[ind].position[Z] - position[Z]);		
+		slTranslate(object[ind].position[X] - pl_position[X],
+			object[ind].position[Y] - pl_position[Y],
+			object[ind].position[Z] - pl_position[Z]);		
+		//	Rotate object
+			slRotY(-object[ind].theta[Y]);	
 		//	Sets scale of 3D draw, larger numbers draw bigger		
 		slScale(object[ind].scale[X],object[ind].scale[Y],
 			object[ind].scale[Z]);	
 	
-		display_model(object[ind].entity);				//	Displays model
-		//display_model(&entities[0]);				//	Displays model
+		display_model(object[ind].entity);			//	Displays model
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
 	}
 
@@ -123,23 +126,29 @@ void my_draw(void)
 //  Main Logic Loop
 void main_loop(void)
 {
+	VECTOR gravity = {0, toFIXED(0.05), 0};
+	
 	while(1)
 	{
 		//	Time
+		framerate = (int)SynchConst;
 		timer();
 		
 		//	Pop matrix to unit matrix at pointer '0'
 		slUnitMatrix(0);	
-
 		slPrintFX(toFIXED(num_object),slLocate(30,0));
 
 		//  Handle Input
 		gamepad_input();
-		framerate = (int)SynchConst;
-		forward_target(tar_dist);
 
 		//	Print Orientation Data
 		print_orientation();
+
+		//	Apply physics on objects
+		apply_accel_all(gravity);
+		is_collide_all();
+		stop_collided();
+		update_obj_position();
 
 		//  Draw Objects
 		my_draw();
