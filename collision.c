@@ -94,7 +94,7 @@ bool is_rough_collide(FIXED P1[XYZ], FIXED P1rr, int ID)
 }
 
 //	Find (half) furthest distance between points in model
-void is_collide_all(void)
+void is_rough_collide_all(void)
 {
 	FIXED point[XYZ];
 	FIXED rr = 0 << 16;

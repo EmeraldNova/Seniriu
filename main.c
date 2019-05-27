@@ -39,6 +39,7 @@
 #include "input.h"
 #include "game_object.h"
 #include "collision.h"
+#include "test2D.h"
 
 static int framenum = 0;
 static Uint8 old_tick = 0;
@@ -53,6 +54,7 @@ GfsDirTbl gfsDirTbl;
 GfsDirName gfsDirName[DIR_MAX];
 Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 Sint32 gfsDirN;
+//static int BG;
 
 //	File access with calls to SGL structs and definitions
 void ztCDinit(void)
@@ -146,7 +148,7 @@ void main_loop(void)
 
 		//	Apply physics on objects
 		apply_accel_all(gravity);
-		is_collide_all();
+		is_rough_collide_all();
 		stop_collided();
 		update_obj_position();
 
@@ -162,6 +164,7 @@ void jo_main(void)
 {
 	//  Initialize engine with black background
 	jo_core_init(JO_COLOR_Black);	
+	test2D_init();
 
 	//	Added by XL2 
 	fadeOut(true);			//	Fade out screen and blank background
@@ -170,8 +173,9 @@ void jo_main(void)
 	slZdspLevel(7);			//	Define frustrum culling near plane
     /****/
 	
-	//	Add time polling callback
-	//slIntFunction(timer);
+	//	Shoehorn in Background Layer
+	// BG = jo_sprite_add_tga(JO_ROOT_DIR, "BGTREE1.TGA", JO_COLOR_Transparent);
+	// jo_set_background_sprite(BG, 0, 0); 	
 
 	/**XL2**/
 	ztCDinit(); 	//	Prepare file system for loading things in directory
@@ -180,7 +184,7 @@ void jo_main(void)
 
 	fadeIn();	//	Smooth background fade in
 
-	slPrint("Go!",slLocate(19,0));
+	//slPrint("Go!",slLocate(19,0));
 
 	main_loop();	//	Main loop of game
 }
