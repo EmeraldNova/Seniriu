@@ -165,6 +165,8 @@ void jo_main(void)
 	//  Initialize engine with black background
 	jo_core_init(JO_COLOR_Black);	
 	test2D_init();
+	test2D_reset();
+	test2D_loop();
 
 	//	Added by XL2 
 	fadeOut(true);			//	Fade out screen and blank background

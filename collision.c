@@ -61,6 +61,48 @@ FIXED dist(FIXED P1[XYZ], FIXED P2[XYZ])
 	}
 }
 
+//	Calcualte 2D Distance capped to max FIXED
+FIXED dist_2D(FIXED *P1, FIXED *P2)
+{
+	FIXED dx = 0;
+	FIXED dy = 0;
+	FIXED distf = 0;
+	int dxi = 0;
+	int dyi = 0;
+	int disti = 0;
+	
+	//	Calculate differences along axis
+	dx = JO_ABS(*(P1) - *(P2));
+	dy = JO_ABS(*(P1 + 1) - *(P2 + 1));
+	
+	//	Cast to int if distance is too large for FIXED
+	if(dx > (127 << 16) || dy > (127 << 16))
+	{
+		dxi = dx >> 16;
+		dyi = dy >> 16;
+		
+		disti = slSquart(dxi*dxi + dyi*dyi);
+	}
+	else
+	{
+		distf = slSquartFX(slMulFX(dx,dx) + slMulFX(dy,dy));
+	}
+	
+	//	Sort which value to output
+	if(disti > 32768)
+	{
+		return toFIXED(32767.9999999);
+	}
+	else if(disti > (distf >> 16))
+	{
+		return disti << 16;
+	}
+	else
+	{
+		return distf;
+	}
+}
+
 //	Find (half) furthest distance between points in model
 FIXED calc_rough_radius(entity_t * ent_point)
 {

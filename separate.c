@@ -7,16 +7,157 @@
 */
 
 #include "separate.h"
-#include <jo/jo.h>
+#include "collision.h"
 #include "game_object.h"
+#include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 
 //	Cross Product: V3 = V1 X V2 = - V2 X V1
 void cross_product(FIXED V1[XYZ], FIXED V2[XYZ], FIXED V3[XYZ])
 {
 	V3[X] = slMulFX(V1[Y],V2[Z]) - slMulFX(V1[Z], V2[Y]);
-    V3[Y] = slMulFX(V1[X],V2[Z]) - slMulFX(V1[Z], V2[X]);
+    V3[Y] = -slMulFX(V1[X],V2[Z]) + slMulFX(V1[Z], V2[X]);
     V3[Z] = slMulFX(V1[X],V2[Y]) - slMulFX(V1[Y], V2[X]);
+}
+
+//	Construct unit normal vector from two points
+void unit_normal(FIXED *p1, FIXED *p2, FIXED *unit, FIXED *scaled_unit)
+{
+	FIXED dx = *(p2) - *(p1);
+	FIXED dy = *(p2 + 1) - *(p1 + 1);
+	FIXED mag = dist_2D(p1, p2);
+	
+	//	Construct a true unit vector
+	*(unit) = slDivFX(mag, -dy);
+	*(unit + 1) = slDivFX(mag, dx);
+	
+	//	Construct a scaled (1/1.5, 1.5 == 98304) unit vector
+	*(scaled_unit) = slDivFX(98304, *(unit));
+	*(scaled_unit + 1) = slDivFX(98304, *(unit + 1));
+}
+
+//	Projecting 2D points onto line defined by scaled normal
+void project_1D(field_2D *field, FIXED *scaled, FIXED *extent)
+{
+	FIXED value;
+	
+	if(field->nbPoint < 1)
+	{
+		//	No points, 0 extent
+		*(extent) = 0;
+		*(extent + 1) = 0;
+		return;
+	}
+	
+	//	First point, single point extent
+	*(extent) = slMulFX(*(scaled),*(field->verts)) +
+				slMulFX(*(scaled + 1),*(field->verts + 1));
+	*(extent + 1) = *(extent);
+	
+	if(field->nbPoint < 2)
+	{
+		//	1 point, single point extent
+		return;
+	}
+	
+	//	Continue to add points to extent
+	for(int i = 1; i < field->nbPoint; i++)
+	{
+		value = slMulFX(*(scaled),*(field->verts + 2*i)) +
+				slMulFX(*(scaled + 1),*(field->verts + 1 + 2*i));
+				
+		//	Check for max or min
+		if(value < *(extent))
+		{
+			//	Write min
+			*(extent) = value;
+		}
+		else if(value > *(extent + 1))
+		{
+			*(extent + 1) = value;
+		}
+	}
+}
+
+//	Checks for separating axi from two field_2D's. True if colliding.
+bool separate_2D(field_2D *field1, field_2D *field2)
+{
+	int num_line_1 = field1->nbPoint;
+	int num_line_2 = field2->nbPoint;
+	int start_con_1 = *(field1->connections);
+	int start_con_2 = *(field2->connections);
+	
+	FIXED *normal = (FIXED*) jo_malloc(2 * sizeof(FIXED));
+	FIXED *scaled = (FIXED*) jo_malloc(2 * sizeof(FIXED));
+	FIXED *extent1 = (FIXED*) jo_malloc(2 * sizeof(FIXED));
+	FIXED *extent2 = (FIXED*) jo_malloc(2 * sizeof(FIXED));
+	
+	//	Find out how many unique line segments form a convex hull for each field
+	for(int i = 1; i < num_line_1; i++)
+	{
+		if(start_con_1 == field1->connections[i])
+		{
+			num_line_1 = i - 1;
+			break;
+		}
+	}
+	for(int i = 1; i < num_line_2; i++)
+	{
+		if(start_con_2 == field2->connections[i])
+		{
+			num_line_2 = i - 1;
+			break;
+		}
+	}
+	
+	//	Loop through each line segment on field 1
+	for(int i = 0; i < num_line_1; i++)
+	{
+		//	 Get normal
+		unit_normal((field1->verts + 2 * *(field1->connections + i)),
+				(field1->verts + 2 * *(field1->connections + (i+1))), 
+				normal, scaled);
+		
+		//	Calculate field extents projected onto normal
+		project_1D(field1, scaled, extent1);
+		project_1D(field2, scaled, extent2);
+		
+		//	Compare extents for overlap
+		if(*(extent1) > *(extent2 + 1))
+		{
+			return false;
+		}
+		if(*(extent2) > *(extent1 + 1))
+		{
+			return false;
+		}
+	}
+	
+	//	Loop through each line segment on field 2
+	for(int i = 0; i < num_line_2; i++)
+	{
+		//	 Get normal
+		unit_normal((field2->verts + 2 * *(field2->connections + i)),
+				(field2->verts + 2 * *(field2->connections + (i+1))), 
+				normal, scaled);
+		
+		//	Calculate field extents projected onto normal
+		project_1D(field1, scaled, extent1);
+		project_1D(field2, scaled, extent2);
+		
+		//	Compare extents for overlap
+		if(*(extent1) > *(extent2 + 1))
+		{
+			return false;
+		}
+		if(*(extent2) > *(extent1 + 1))
+		{
+			return false;
+		}
+	}
+	
+	//	No separating axis, collision is true
+	return true;
 }
 
 //	Check if value is already in list
@@ -140,15 +281,5 @@ void convex_hull(field_2D *shape)
 	}
 	
 	return;
-}
-
-//	2D Separate Axis Collision Check
-bool separate_axis_2d(field_2D * shape_1, field_2D * shape_2)
-{
-	bool colliding = false;
-	
-	
-	
-	return colliding;
 }
 

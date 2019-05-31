@@ -15,6 +15,7 @@
 #include "ZT/ZT_COMMON.h"
 
 void test2D_init(void);
+void test2D_reset(void);
 void test2D_loop(void);
 
 #endif

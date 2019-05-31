@@ -18,6 +18,7 @@ FIXED r_radius[1];
 bool collision_master[201];
 
 FIXED dist(FIXED P1[XYZ], FIXED P2[XYZ]);
+FIXED dist_2D(FIXED *P1, FIXED *P2);
 FIXED calc_rough_radius(entity_t * ent_point);
 bool is_rough_collide(FIXED P1[XYZ], FIXED P1rr, int ID);
 void is_rough_collide_all(void);

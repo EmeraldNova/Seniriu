@@ -15,80 +15,88 @@
 field_2D field1;
 field_2D field2;
 FIXED point[2][2];
+int dx = 0;
+int dy = 0;
+
+//	Variable initializations
+FIXED normal[2];
+FIXED scaled[2];
+FIXED extent1[2];
+FIXED extent2[2];
 
 void test2D_init(void)
 {
-	//	Malloc points
-	//FIXED * points1 = jo_malloc(6 * sizeof(FIXED[XYZ]));
-	//FIXED * points2 = jo_malloc(6 * sizeof(FIXED[XYZ]));
-	
 	//	Setup fields
-	field1.nbPoint = 12;
+	field1.nbPoint = 4;
 	field1.verts = (FIXED*) jo_malloc(field1.nbPoint * 2 * sizeof(FIXED));
 	field1.connections = (int*) jo_malloc(field1.nbPoint * sizeof(int));
 	field2.nbPoint = 4;
 	field2.verts = (FIXED*) jo_malloc(field2.nbPoint * 2 * sizeof(FIXED));
 	field2.connections = (int*) jo_malloc(field2.nbPoint * sizeof(int));
-	
+}
+
+void test2D_reset(void)
+{
 	//	Define Points
-	*(field1.verts +2*0 + 0) = 100 << 16;
-	*(field1.verts +2*0 + 1) = 100 << 16;
-	*(field1.verts +2*1 + 0) = 200 << 16;
-	*(field1.verts +2*1 + 1) = 100 << 16;
-	*(field1.verts +2*2 + 0) = 150 << 16;
-	*(field1.verts +2*2 + 1) = 150 << 16;
-	*(field1.verts +2*3 + 0) = 150 << 16;
-	*(field1.verts +2*3 + 1) = 50 << 16;
-	*(field1.verts +2*4 + 0) = 125 << 16;
-	*(field1.verts +2*4 + 1) = 100 << 16;
-	*(field1.verts +2*5 + 0) = 150 << 16;
-	*(field1.verts +2*5 + 1) = 125 << 16;
-	*(field1.verts +2*6 + 0) = 56 << 16;
-	*(field1.verts +2*6 + 1) = 83 << 16;
-	*(field1.verts +2*7 + 0) = 90 << 16;
-	*(field1.verts +2*7 + 1) = 45 << 16;
-	*(field1.verts +2*8 + 0) = 120 << 16;
-	*(field1.verts +2*8 + 1) = 166 << 16;
-	*(field1.verts +2*9 + 0) = 76 << 16;
-	*(field1.verts +2*9 + 1) = 23 << 16;
-	*(field1.verts +2*10 + 0) = 43 << 16;
-	*(field1.verts +2*10 + 1) = 98 << 16;
-	*(field1.verts +2*11 + 0) = 77 << 16;
-	*(field1.verts +2*11 + 1) = 55 << 16;
-	field1.connections[0] = 10;
-	field1.connections[1] = 10;
-	field1.connections[2] = 10;
-	field1.connections[3] = 10;
-	field1.connections[4] = 10;
-	field1.connections[5] = 10;
-	field1.connections[6] = 10;
-	field1.connections[7] = 10;
-	field1.connections[8] = 10;
-	field1.connections[9] = 10;
-	field1.connections[10] = 10;
-	field1.connections[11] = 10;
+	*(field1.verts +2*0 + 0) = (50 + dx) << 16;
+	*(field1.verts +2*0 + 1) = (50 + dy) << 16;
+	*(field1.verts +2*1 + 0) = (50 + dx) << 16;
+	*(field1.verts +2*1 + 1) = (100 + dy) << 16;
+	*(field1.verts +2*2 + 0) = (100 + dx) << 16;
+	*(field1.verts +2*2 + 1) = (100 + dy) << 16;
+	*(field1.verts +2*3 + 0) = (100 + dx) << 16;
+	*(field1.verts +2*3 + 1) = (50 + dy) << 16;
+	field1.connections[0] = 0;
+	field1.connections[1] = 0;
+	field1.connections[2] = 0;
+	field1.connections[3] = 0;
 	convex_hull(&field1);
 	
-	*(field2.verts +2*0 + 0) = 150 << 16;
+	*(field2.verts +2*0 + 0) = 50 << 16;
 	*(field2.verts +2*0 + 1) = 150 << 16;
-	*(field2.verts +2*1 + 0) = 250 << 16;
+	*(field2.verts +2*1 + 0) = 150 << 16;
 	*(field2.verts +2*1 + 1) = 150 << 16;
-	*(field2.verts +2*2 + 0) = 250 << 16;
-	*(field2.verts +2*2 + 1) = 239 << 16;
-	*(field2.verts +2*3 + 0) = 150 << 16;
-	*(field2.verts +2*3 + 1) = 239 << 16;
+	*(field2.verts +2*2 + 0) = 100 << 16;
+	*(field2.verts +2*2 + 1) = 200 << 16;
+	*(field2.verts +2*3 + 0) = 100 << 16;
+	*(field2.verts +2*3 + 1) = 100 << 16;
 	field2.connections[0] = 0;
-	field2.connections[1] = 1;
-	field2.connections[2] = 2;
-	field2.connections[3] = 3;
-	
-	test2D_loop();
+	field2.connections[1] = 0;
+	field2.connections[2] = 0;
+	field2.connections[3] = 0;
+	convex_hull(&field2);
 }
 
 void test2D_loop(void)
 {
 	while(true)
 	{
+		//	Reset with start
+		if(jo_is_pad1_key_pressed(JO_KEY_UP))
+		{
+			dy = dy + 2;
+		}
+		if(jo_is_pad1_key_pressed(JO_KEY_DOWN))
+		{
+			dy = dy - 2;
+		}
+		if(jo_is_pad1_key_pressed(JO_KEY_RIGHT))
+		{
+			dx = dx + 2;
+		}
+		if(jo_is_pad1_key_pressed(JO_KEY_LEFT))
+		{
+			dx = dx - 2;
+		}
+		if(jo_is_pad1_key_pressed(JO_KEY_START))
+		{
+			dx = 0;
+			dy = 0;
+		}
+		jo_clear_background(JO_COLOR_Black);
+		test2D_reset();
+		
+		
 		// Field 1 Connections
 		for(int i = 0; i < (field1.nbPoint - 1); i++)
 		{
@@ -136,6 +144,17 @@ void test2D_loop(void)
 										239 - (*(field2.verts + 2* i + 1) >> 16),
 										JO_COLOR_Green);
 		}
+		
+		//	Test for collision and print result
+		if(separate_2D(&field1, &field2))
+		{
+			slPrint("Collision!     ",slLocate(0,0));
+		}
+		else
+		{
+			slPrint("Not colliding. ",slLocate(0,0));
+		}
+		
 		
 		slSynch();	
 	}
