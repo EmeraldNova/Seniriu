@@ -32,6 +32,8 @@ void unit_normal(FIXED *p1, FIXED *p2, FIXED *unit, FIXED *scaled_unit)
 	*(unit + 1) = slDivFX(mag, dx);
 	
 	//	Construct a scaled (1/1.5, 1.5 == 98304) unit vector
+	//	Required in case projection is very high in both x and y
+	//	Worst case, SQRT(2) * Max FIXED
 	*(scaled_unit) = slDivFX(98304, *(unit));
 	*(scaled_unit + 1) = slDivFX(98304, *(unit + 1));
 }
@@ -82,41 +84,59 @@ void project_1D(field_2D *field, FIXED *scaled, FIXED *extent)
 //	Checks for separating axi from two field_2D's. True if colliding.
 bool separate_2D(field_2D *field1, field_2D *field2)
 {
-	int num_line_1 = field1->nbPoint;
-	int num_line_2 = field2->nbPoint;
+	int num_line_1 = 0;
+	int num_line_2 = 0;
 	int start_con_1 = *(field1->connections);
 	int start_con_2 = *(field2->connections);
 	
-	FIXED *normal = (FIXED*) jo_malloc(2 * sizeof(FIXED));
-	FIXED *scaled = (FIXED*) jo_malloc(2 * sizeof(FIXED));
-	FIXED *extent1 = (FIXED*) jo_malloc(2 * sizeof(FIXED));
-	FIXED *extent2 = (FIXED*) jo_malloc(2 * sizeof(FIXED));
+	FIXED normal[2];
+	FIXED scaled[2];
+	FIXED extent1[2];
+	FIXED extent2[2];
 	
 	//	Find out how many unique line segments form a convex hull for each field
-	for(int i = 1; i < num_line_1; i++)
+	for(int i = 1; i < field1->nbPoint; i++)
 	{
+		if((field1->nbPoint < 2) || (field1->connections[i] == field1->connections[i-1]))
+		{
+			break;
+		}
+		num_line_1 = i;
 		if(start_con_1 == field1->connections[i])
 		{
-			num_line_1 = i - 1;
 			break;
 		}
 	}
-	for(int i = 1; i < num_line_2; i++)
+	for(int i = 1; i < field2->nbPoint; i++)
 	{
+		if((field2->nbPoint < 2) || (field2->connections[i] == field2->connections[i-1]))
+		{
+			break;
+		}
+		num_line_2 = i;
 		if(start_con_2 == field2->connections[i])
 		{
-			num_line_2 = i - 1;
 			break;
 		}
 	}
 	
+	
+	
 	//	Loop through each line segment on field 1
-	for(int i = 0; i < num_line_1; i++)
+	for(int i = 0; i <= num_line_1; i++)
 	{
 		//	 Get normal
-		unit_normal((field1->verts + 2 * *(field1->connections + i)),
+		if(i < num_line_1)
+		{
+			unit_normal((field1->verts + 2 * *(field1->connections + i)),
 				(field1->verts + 2 * *(field1->connections + (i+1))), 
 				normal, scaled);
+		}
+		else{
+			unit_normal((field1->verts + 2 * *(field1->connections + num_line_1)),
+				(field1->verts + 2 * *(field1->connections)), 
+				normal, scaled);
+		}
 		
 		//	Calculate field extents projected onto normal
 		project_1D(field1, scaled, extent1);
@@ -125,21 +145,31 @@ bool separate_2D(field_2D *field1, field_2D *field2)
 		//	Compare extents for overlap
 		if(*(extent1) > *(extent2 + 1))
 		{
+			//	Minimum of field 1 > max of field 2, no collision
 			return false;
 		}
 		if(*(extent2) > *(extent1 + 1))
 		{
+			//	Minimum of field 2 > max of field 1, no collision
 			return false;
 		}
 	}
 	
 	//	Loop through each line segment on field 2
-	for(int i = 0; i < num_line_2; i++)
+	for(int i = 0; i <= num_line_2; i++)
 	{
 		//	 Get normal
-		unit_normal((field2->verts + 2 * *(field2->connections + i)),
+		if(i < num_line_2)
+		{
+			unit_normal((field2->verts + 2 * *(field2->connections + i)),
 				(field2->verts + 2 * *(field2->connections + (i+1))), 
 				normal, scaled);
+		}
+		else{
+			unit_normal((field2->verts + 2 * *(field2->connections + num_line_2)),
+				(field2->verts + 2 * *(field2->connections)), 
+				normal, scaled);
+		}
 		
 		//	Calculate field extents projected onto normal
 		project_1D(field1, scaled, extent1);
@@ -148,10 +178,12 @@ bool separate_2D(field_2D *field1, field_2D *field2)
 		//	Compare extents for overlap
 		if(*(extent1) > *(extent2 + 1))
 		{
+			//	Minimum of field 1 > max of field 2, no collision
 			return false;
 		}
 		if(*(extent2) > *(extent1 + 1))
 		{
+			//	Minimum of field 2 > max of field 1, no collision
 			return false;
 		}
 	}
@@ -175,7 +207,7 @@ bool in_list(int value, int list_len, int *list)
 //	Finds index of min or max x value coordinate
 int find_x_extreme(field_2D *field, bool max)
 {
-	FIXED extreme = -2147483648;
+	FIXED extreme = -2147483648;			//	Fixed max
 	int signmod = 1;
 	int exdex = 0;
 	if(!max)
@@ -203,7 +235,7 @@ int convex_hull_max_angle(field_2D *shape, int ind, bool backward)
 	FIXED dx;
 	FIXED dy;
 	ANGLE theta_current;
-	ANGLE theta_adj = 32768;	//	angle + 180 to prevent negative wrap around
+	ANGLE theta_adj = 32768;	//	angle + 180 to prevent negative wrap around for dy < 0
 	ANGLE theta_record;
 	
 	if(backward)
@@ -259,22 +291,23 @@ void convex_hull(field_2D *shape)
 	}
 
 	//	Low to high (top hull)
+	bool backward = false;
 	for(i = 1; i < shape->nbPoint; i++)
 	{
-		shape->connections[i] = convex_hull_max_angle(shape,shape->connections[i-1],false);
+		shape->connections[i] = convex_hull_max_angle(shape,shape->connections[i-1],backward);
 		
 		if(shape->connections[i] == maxdex)
 		{
-			break;
+			backward = true;
 		}
-	}
+	/*}
 	
 	//	High to low (bottom hull)
-	while((shape->connections[i] != mindex) && i <= shape->nbPoint)
+	for(i = i; i < shape->nbPoint; i++)
 	{
-		i++;
 		shape->connections[i] = convex_hull_max_angle(shape,shape->connections[i-1],true);
-		if(shape->connections[i] == mindex)
+	*/
+		if(shape->connections[i] == shape->connections[0])
 		{
 			break;
 		}

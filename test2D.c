@@ -38,26 +38,26 @@ void test2D_init(void)
 void test2D_reset(void)
 {
 	//	Define Points
-	*(field1.verts +2*0 + 0) = (50 + dx) << 16;
+	*(field1.verts +2*0 + 0) = (100 + dx) << 16;
 	*(field1.verts +2*0 + 1) = (50 + dy) << 16;
-	*(field1.verts +2*1 + 0) = (50 + dx) << 16;
-	*(field1.verts +2*1 + 1) = (100 + dy) << 16;
-	*(field1.verts +2*2 + 0) = (100 + dx) << 16;
-	*(field1.verts +2*2 + 1) = (100 + dy) << 16;
-	*(field1.verts +2*3 + 0) = (100 + dx) << 16;
-	*(field1.verts +2*3 + 1) = (50 + dy) << 16;
+	*(field1.verts +2*1 + 0) = (50 + 0*dx) << 16;
+	*(field1.verts +2*1 + 1) = (75 + 0*dy) << 16;
+	*(field1.verts +2*2 + 0) = (100 + 0*dx) << 16;
+	*(field1.verts +2*2 + 1) = (75 + 0*dy) << 16;
+	*(field1.verts +2*3 + 0) = (100 + 0*dx) << 16;
+	*(field1.verts +2*3 + 1) = (25 + 0*dy) << 16;
 	field1.connections[0] = 0;
 	field1.connections[1] = 0;
 	field1.connections[2] = 0;
 	field1.connections[3] = 0;
 	convex_hull(&field1);
 	
-	*(field2.verts +2*0 + 0) = 50 << 16;
-	*(field2.verts +2*0 + 1) = 150 << 16;
+	*(field2.verts +2*0 + 0) = 100 << 16;
+	*(field2.verts +2*0 + 1) = 200 << 16;
 	*(field2.verts +2*1 + 0) = 150 << 16;
 	*(field2.verts +2*1 + 1) = 150 << 16;
-	*(field2.verts +2*2 + 0) = 100 << 16;
-	*(field2.verts +2*2 + 1) = 200 << 16;
+	*(field2.verts +2*2 + 0) = 50 << 16;
+	*(field2.verts +2*2 + 1) = 150 << 16;
 	*(field2.verts +2*3 + 0) = 100 << 16;
 	*(field2.verts +2*3 + 1) = 100 << 16;
 	field2.connections[0] = 0;
@@ -69,32 +69,43 @@ void test2D_reset(void)
 
 void test2D_loop(void)
 {
+	bool redraw = true;
 	while(true)
 	{
-		//	Reset with start
+		
 		if(jo_is_pad1_key_pressed(JO_KEY_UP))
 		{
 			dy = dy + 2;
+			redraw = true;
 		}
 		if(jo_is_pad1_key_pressed(JO_KEY_DOWN))
 		{
 			dy = dy - 2;
+			redraw = true;
 		}
 		if(jo_is_pad1_key_pressed(JO_KEY_RIGHT))
 		{
 			dx = dx + 2;
+			redraw = true;
 		}
 		if(jo_is_pad1_key_pressed(JO_KEY_LEFT))
 		{
 			dx = dx - 2;
+			redraw = true;
 		}
 		if(jo_is_pad1_key_pressed(JO_KEY_START))
 		{
+			//	Reset with start
 			dx = 0;
 			dy = 0;
+			redraw = true;
 		}
-		jo_clear_background(JO_COLOR_Black);
-		test2D_reset();
+		if(redraw)
+		{
+			jo_clear_background(JO_COLOR_Black);
+			test2D_reset();
+			redraw = false;
+		}
 		
 		
 		// Field 1 Connections
@@ -125,8 +136,8 @@ void test2D_loop(void)
 		//	Draw last connection
 		jo_draw_background_line(*(field2.verts + 2* field2.connections[field2.nbPoint - 1] + 0) >> 16,
 									239 - (*(field2.verts + 2* field2.connections[field2.nbPoint - 1] + 1) >> 16),
-									*(field2.verts + 2* 0 + 0) >> 16,
-									239 - (*(field2.verts + 2* 0 + 1) >> 16),
+									*(field2.verts + 2* field2.connections[0] + 0) >> 16,
+									239 - (*(field2.verts + 2* field2.connections[0] + 1) >> 16),
 									JO_COLOR_Red);
 		
 		//	Field 1 points
@@ -154,6 +165,14 @@ void test2D_loop(void)
 		{
 			slPrint("Not colliding. ",slLocate(0,0));
 		}
+		
+		
+		//	Print Tests
+		slPrintFX(toFIXED(*(field1.connections+0)),slLocate(0,3));
+		slPrintFX(toFIXED(*(field1.connections+1)),slLocate(20,3));
+		slPrintFX(toFIXED(*(field1.connections+2)),slLocate(0,4));
+		slPrintFX(toFIXED(*(field1.connections+3)),slLocate(20,4));
+		
 		
 		
 		slSynch();	
