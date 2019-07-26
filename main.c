@@ -38,7 +38,6 @@
 
 #include "input.h"
 #include "game_object.h"
-#include "collision.h"
 #include "test2D.h"
 
 static int framenum = 0;
@@ -164,9 +163,9 @@ void jo_main(void)
 {
 	//  Initialize engine with black background
 	jo_core_init(JO_COLOR_Black);	
-	test2D_init();
-	test2D_reset();
-	test2D_loop();
+	//test2D_init();
+	//test2D_reset();
+	//test2D_loop();
 
 	//	Added by XL2 
 	fadeOut(true);			//	Fade out screen and blank background

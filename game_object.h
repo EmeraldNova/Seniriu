@@ -13,6 +13,7 @@
 #include "ZT/ZT_COMMON.h"
 #include "input.h"
 #include "timer.h"
+#include "collision.h"
 
 //  Game Object containing necessary items for rendering
 typedef struct {

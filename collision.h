@@ -14,6 +14,18 @@
 #include "ZT/ZT_COMMON.h"
 #include "input.h"
 
+//	Bounding Box
+typedef struct {
+	//	Center point offset from parent's postion[XYZ]
+	FIXED *center;
+	
+	//	Corners of bounding box
+	FIXED corners[8][3];
+	
+	//	Game Object for the bounding box
+	int parent_ID;
+}b_box;
+
 FIXED r_radius[1];
 bool collision_master[201];
 

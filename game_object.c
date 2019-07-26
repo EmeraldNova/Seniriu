@@ -11,6 +11,7 @@
 #include "ZT/ZT_COMMON.h"
 #include "input.h"
 #include "timer.h"
+#include "collision.h"
 
 //  Array of game objects
 int max_objects = 200;

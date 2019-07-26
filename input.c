@@ -126,8 +126,8 @@ void print_orientation(void)
 	slPrint("Time:",slLocate(0,1));
 	slPrintFX(time,slLocate(6,1));
 	slPrint("Framerate:",slLocate(19,1));
-	slPrintFX(slDivFX(dt,1 << 16),slLocate(30,1));
-	slPrint("FPS",slLocate(38,1));
+	slPrintFX(slDivFX(dt,1 << 16),slLocate(29,1));
+	slPrint("FPS",slLocate(37,1));
 	
 	
 	slPrint("  Position     Rotation      Target   ",slLocate(0,2));

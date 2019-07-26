@@ -26,21 +26,26 @@ void unit_normal(FIXED *p1, FIXED *p2, FIXED *unit, FIXED *scaled_unit)
 	FIXED dx = *(p2) - *(p1);
 	FIXED dy = *(p2 + 1) - *(p1 + 1);
 	FIXED mag = dist_2D(p1, p2);
+	FIXED rec_mag = slDivFX(mag, 1);
 	
 	//	Construct a true unit vector
-	*(unit) = slDivFX(mag, -dy);
-	*(unit + 1) = slDivFX(mag, dx);
+	*(unit) = slMulFX(rec_mag, -dy);
+	*(unit + 1) = slMulFX(rec_mag, dx);
 	
 	//	Construct a scaled (1/1.5, 1.5 == 98304) unit vector
+	//	(1/1.5 = 2/3 == 43690.7)
 	//	Required in case projection is very high in both x and y
 	//	Worst case, SQRT(2) * Max FIXED
-	*(scaled_unit) = slDivFX(98304, *(unit));
-	*(scaled_unit + 1) = slDivFX(98304, *(unit + 1));
+	*(scaled_unit) = slMulFX(43690, *(unit));
+	*(scaled_unit + 1) = slMulFX(43690, *(unit + 1));
 }
 
 //	Projecting 2D points onto line defined by scaled normal
 void project_1D(field_2D *field, FIXED *scaled, FIXED *extent)
 {
+	//	Writes an extent taht described minimum and maximum extent of
+	//	porjection of 2D poitnso nto 1D line. Overlapping extents will
+	//	determine collision
 	FIXED value;
 	
 	if(field->nbPoint < 1)
@@ -81,7 +86,50 @@ void project_1D(field_2D *field, FIXED *scaled, FIXED *extent)
 	}
 }
 
-//	Checks for separating axi from two field_2D's. True if colliding.
+/*
+//	Projecting 2D points onto line defined by scaled normal
+void project_1D_bbox(b_box *box, FIXED scaled[XYZ], FIXED *extent)
+{
+	//	Writes an extent that described minimum and maximum extent of
+	//	projection of bounding box corners onto 1D line. Overlapping extents
+	//	will determine collision
+	
+	//	Calculate offsets based on game_object position, bounding box center offset
+	FIXED x_offset = *(box->center) + object[*(box->parent_ID)].position[X];
+	FIXED y_offset = *(box->center + 1) + object[*(box->parent_ID)].position[Y];
+	FIXED z_offset = *(box->center + 2) + object[*(box->parent_ID)].position[Z];
+	
+	//	Intialize value with dot product
+	FIXED value = slMulFX(scaled[X],*(box->corners) + x_offset) +
+			slMulFX(scaled[Y],*(box->corners + 1) + y_offset) +
+			slMulFX(scaled[Z],*(box->corners + 2) + z_offset);
+			
+	//	Initialzie extent
+	*(extent) = value;
+	*(extent + 1) = value;
+	
+	//	Add points to extent
+	for(int i = 1; i < 8; i++)
+	{
+		value = slMulFX(scaled[X],*(box->corners + 3*i) + x_offset) +
+			slMulFX(scaled[Y],*(box->corners + 3*i + 1) + y_offset) +
+			slMulFX(scaled[Z],*(box->corners + 3*i + 2) + z_offset);
+				
+		//	Check for max or min
+		if(value < *(extent))
+		{
+			//	Write min
+			*(extent) = value;
+		}
+		else if(value > *(extent + 1))
+		{
+			*(extent + 1) = value;
+		}
+	}
+}
+*/
+
+//	Checks for separating axis from two field_2D's. True if colliding.
 bool separate_2D(field_2D *field1, field_2D *field2)
 {
 	int num_line_1 = 0;
@@ -191,6 +239,160 @@ bool separate_2D(field_2D *field1, field_2D *field2)
 	//	No separating axis, collision is true
 	return true;
 }
+
+/*
+//	Checks for separating axis from two bounding boxes. True if colliding.
+bool separate_3D_bbox(b_box *box1, b_box *box2)
+{
+	//	Projection vectors
+	FIXED normal[15][3];
+	FIXED scaled[15][3];
+	//	Extents to test against for collision
+	FIXED extent1[2];
+	FIXED extent2[2];
+	//	Rotation Matrices
+	FIXED R1[3][3];
+	FIXED R2[3][3];
+	
+	//	Construct base normals
+	//	X1
+	normal[0][0] = 1 << 16;
+	normal[0][1] = 0;
+	normal[0][2] = 0;
+	//	Y1
+	normal[1][0] = 0;
+	normal[1][1] = 1 << 16;
+	normal[1][2] = 0;
+	//	Z1
+	normal[2][0] = 0;
+	normal[2][1] = 0;
+	normal[2][2] = 1 << 16;
+	//	X2
+	normal[3][0] = 1 << 16;
+	normal[3][1] = 0;
+	normal[3][2] = 0;
+	//	Y2
+	normal[4][0] = 0;
+	normal[4][1] = 1 << 16;
+	normal[4][2] = 0;
+	//	Z2
+	normal[5][0] = 0;
+	normal[5][1] = 0;
+	normal[5][2] = 1 << 16;
+	
+	//	Rotation Angles Box 1
+	ANGLE RX1 = object[*(box1->parent_ID)].theta[X];
+	ANGLE RY1 = object[*(box1->parent_ID)].theta[Y];
+	ANGLE RZ1 = object[*(box1->parent_ID)].theta[Z];
+	//	Rotation Angles Box 2
+	ANGLE RX2 = object[*(box2->parent_ID)].theta[X];
+	ANGLE RY2 = object[*(box2->parent_ID)].theta[Y];
+	ANGLE RZ2 = object[*(box2->parent_ID)].theta[Z];
+	
+	//	Calculate Rotation Matrix Box 1
+	R1[0][0] = 32768*(slCos(RY1 + RZ1) + slCos(RY1 - RZ1));
+	R1[0][1] = -32768*(slSin(RZ1 + RX1) + slSin(RZ1 - RX1)) + 
+				16384*(slCos(RX1-RY1-RZ1) - slCos(RX1+RY1-RZ1) + 
+						slCos(RX1-RY1+RZ1) - slCos(RX1+RY1+RZ1));
+	R1[0][2] = -32768*(slCos(RX1 - RZ1) - slCos(RX1 + RZ1)) + 
+				16384*(-slSin(RX1-RY1-RZ1) + slSin(RX1+RY1-RZ1) - 
+						slSin(RX1-RY1+RZ1) + slSin(RX1+RY1+RZ1));
+	R1[1][0] = 32768*(slSin(RZ1 + RY1) + slSin(RZ1 - RY1));
+	R1[1][1] = 32768*(slCos(RX1 + RZ1) + slCos(RX1 - RZ1)) + 
+				16384*(-slSin(RX1-RY1-RZ1) + slSin(RX1+RY1-RZ1) + 
+						slSin(RX1-RY1+RZ1) - slSin(RX1+RY1+RZ1));
+	R1[1][2] = -32768*(slSin(RX1 + RZ1) + slSin(RX1 - RZ1)) + 
+				16384*(-slCos(RX1-RY1-RZ1) + slCos(RX1+RY1-RZ1) + 
+						slCos(RX1-RY1+RZ1) - slCos(RX1+RY1+RZ1));
+	R1[2][0] = -slSin(RY1);
+	R1[2][1] = 32768*(slSin(RX1 + RY1) + slSin(RX1 - RY1));
+	R1[2][2] = 32768*(slCos(RX1 + RY1) + slCos(RX1 - RY1));
+	
+	//	Calculate Rotation Matrix Box 2
+	R1[0][0] = 32768*(slCos(RY2 + RZ2) + slCos(RY2 - RZ2));
+	R2[0][1] = -32768*(slSin(RZ2 + RX2) + slSin(RZ2 - RX2)) + 
+				26384*(slCos(RX2-RY2-RZ2) - slCos(RX2+RY2-RZ2) + 
+						slCos(RX2-RY2+RZ2) - slCos(RX2+RY2+RZ2));
+	R2[0][2] = -32768*(slCos(RX2 - RZ2) - slCos(RX2 + RZ2)) + 
+				26384*(-slSin(RX2-RY2-RZ2) + slSin(RX2+RY2-RZ2) - 
+						slSin(RX2-RY2+RZ2) + slSin(RX2+RY2+RZ2));
+	R2[1][0] = 32768*(slSin(RZ2 + RY2) + slSin(RZ2 - RY2));
+	R2[1][1] = 32768*(slCos(RX2 + RZ2) + slCos(RX2 - RZ2)) + 
+				26384*(-slSin(RX2-RY2-RZ2) + slSin(RX2+RY2-RZ2) + 
+						slSin(RX2-RY2+RZ2) - slSin(RX2+RY2+RZ2));
+	R2[1][2] = -32768*(slSin(RX2 + RZ2) + slSin(RX2 - RZ2)) + 
+				26384*(-slCos(RX2-RY2-RZ2) + slCos(RX2+RY2-RZ2) + 
+						slCos(RX2-RY2+RZ2) - slCos(RX2+RY2+RZ2));
+	R2[2][0] = -slSin(RY2);
+	R2[2][1] = 32768*(slSin(RX2 + RY2) + slSin(RX2 - RY2));
+	R2[2][2] = 32768*(slCos(RX2 + RY2) + slCos(RX2 - RY2));
+
+	
+	//	Loop through each line segment on field 1
+	for(int i = 0; i <= 15; i++)
+	{
+		//	Construct a scaled (1/1.5, 1.5 == 98304) unit vector
+		//	(1/1.5 = 2/3 == 43690.7)
+		//	Required in case projection is very high in both x and y
+		//	Worst case, SQRT(2) * Max FIXED
+		scaled[i][1] = slMulFX(43690, normal[i][0]);
+		scaled[i][2] = slMulFX(43690, normal[i][1]);
+		scaled[i][3] = slMulFX(43690, normal[i][2]);
+		
+		//	Calculate field extents projected onto normal
+		project_1D(field1, scaled, extent1);
+		project_1D(field2, scaled, extent2);
+		
+		//	Compare extents for overlap
+		if(*(extent1) > *(extent2 + 1))
+		{
+			//	Minimum of field 1 > max of field 2, no collision
+			return false;
+		}
+		if(*(extent2) > *(extent1 + 1))
+		{
+			//	Minimum of field 2 > max of field 1, no collision
+			return false;
+		}
+	}
+	
+	//	Loop through each line segment on field 2
+	for(int i = 0; i <= num_line_2; i++)
+	{
+		//	 Get normal
+		if(i < num_line_2)
+		{
+			unit_normal((field2->verts + 2 * *(field2->connections + i)),
+				(field2->verts + 2 * *(field2->connections + (i+1))), 
+				normal, scaled);
+		}
+		else{
+			unit_normal((field2->verts + 2 * *(field2->connections + num_line_2)),
+				(field2->verts + 2 * *(field2->connections)), 
+				normal, scaled);
+		}
+		
+		//	Calculate field extents projected onto normal
+		project_1D(field1, scaled, extent1);
+		project_1D(field2, scaled, extent2);
+		
+		//	Compare extents for overlap
+		if(*(extent1) > *(extent2 + 1))
+		{
+			//	Minimum of field 1 > max of field 2, no collision
+			return false;
+		}
+		if(*(extent2) > *(extent1 + 1))
+		{
+			//	Minimum of field 2 > max of field 1, no collision
+			return false;
+		}
+	}
+	
+	//	No separating axis, collision is true
+	return true;
+}
+*/
 
 //	Check if value is already in list
 bool in_list(int value, int list_len, int *list)
