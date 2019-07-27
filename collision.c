@@ -7,13 +7,10 @@
 */
 
 #include "collision.h"
-#include <jo/jo.h>
-#include "game_object.h"
-#include "ZT/ZT_COMMON.h"
-#include "input.h"
 
 FIXED r_radius[1] = {0};
-bool collision_master[201];
+bool collision_master_rough[201];
+bool collision_master_bbox[201];
 
 //	Calcualte Distance capped to max FIXED
 FIXED dist(FIXED P1[XYZ], FIXED P2[XYZ])
@@ -145,7 +142,7 @@ void is_rough_collide_all(void)
 	//	Reset collision master
 	for(int ID = 0; ID < 201; ID++)
 	{
-		collision_master[ID] = false;
+		collision_master_rough[ID] = false;
 	}
 	
 	//	Loop first compare object from -1 (player)
@@ -175,8 +172,8 @@ void is_rough_collide_all(void)
 			
 			if(collide_hold)
 			{
-				collision_master[ID1+1] = collide_hold;
-				collision_master[ID2+1] = collide_hold;
+				collision_master_rough[ID1+1] = collide_hold;
+				collision_master_rough[ID2+1] = collide_hold;
 			}
 		}
 	}
@@ -184,12 +181,68 @@ void is_rough_collide_all(void)
 	return;
 }
 
+//	Check if rough collding with object
+bool is_bbox_collide(b_box *box1, int ID2)
+{
+	return separate_3D_bbox(box1, &boxes[ID2]);
+}
+
+//	Find (half) furthest distance between points in model
+void is_bbox_collide_all(void)
+{
+	bool collide_hold;
+	b_box *box1;
+	
+	//	Reset collision master
+	for(int ID = 0; ID < 201; ID++)
+	{
+		collision_master_bbox[ID] = false;
+	}
+	
+	//	Loop first compare object from -1 (player)
+	for(int ID1 = -1; ID1 < num_object; ID1++)
+	{
+		collide_hold = false;
+		
+		//	Differentiate between player boundign box and objects
+		if(ID1 < 0)
+		{
+			box1 = &player_bbox;
+		}
+		else
+		{
+			box1 = &boxes[ID1];
+		}
+		
+		//	Loop second, compare bounding boxes after ID1
+		for(int ID2 = ID1 + 1; ID2 < num_object; ID2++)
+		{
+			//	Only check if rough collision flagged for both
+			if(collision_master_rough[ID1+1]
+				&& collision_master_rough[ID2+1])
+			{
+				collide_hold = is_bbox_collide(box1, ID2);
+			}
+			
+			//	Flag bounding box collision
+			if(collide_hold)
+			{
+				collision_master_bbox[ID1+1] = collide_hold;
+				collision_master_bbox[ID2+1] = collide_hold;
+			}
+		}
+	}
+	
+	return;
+}
+
+
 //	Stops objects that have collisions
 void stop_collided(void)
 {
 	for(int ID = 0; ID < num_object; ID++)
 	{
-		if(collision_master[ID+1])
+		if(collision_master_bbox[ID+1])
 		{
 			stop(ID);
 		}

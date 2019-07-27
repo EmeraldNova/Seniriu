@@ -7,10 +7,7 @@
 */
 
 #include "input.h"
-#include <jo/jo.h>
-#include "ZT/ZT_COMMON.h"
-#include "game_object.h"
-#include "timer.h"
+#include "collision.h"
 
 //	Orientation data
 //	Camera angle away from -Z
@@ -151,6 +148,39 @@ void print_orientation(void)
 		slPrintFX(object[num_object-1].position[Y],slLocate(10,6));
 		slPrint("Velocity: ",slLocate(0,7));
 		slPrintFX(object[num_object-1].velocity[Y],slLocate(10,7));
+		
+		//	Check rough collision
+		if(collision_master_bbox[num_object])
+		{
+			slPrint("Box Colliding       ",slLocate(0,8));
+		}
+		else
+		{
+			slPrint("No Box Colliding    ",slLocate(0,8));
+		}
+		if(num_object > 1)
+		{
+			if(collision_master_bbox[num_object-1])
+			{
+				slPrint("Second Box Colliding",slLocate(0,18));
+			}
+			else
+			{
+				slPrint("Second Not Colliding",slLocate(0,18));
+			}
+		}
+		
+		// Check bounding box collision
+		if(collision_master_bbox[num_object-1])
+		{
+			slPrint("Box Colliding       ",slLocate(20,8));
+		}
+		else
+		{
+			slPrint("No Box Colliding    ",slLocate(20,8));
+		}		
+		
+		print_corners(num_object-1);
 	}
 }
 

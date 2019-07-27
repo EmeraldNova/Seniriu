@@ -7,18 +7,6 @@
 */
 
 #include "separate.h"
-#include "collision.h"
-#include "game_object.h"
-#include <jo/jo.h>
-#include "ZT/ZT_COMMON.h"
-
-//	Cross Product: V3 = V1 X V2 = - V2 X V1
-void cross_product(FIXED V1[XYZ], FIXED V2[XYZ], FIXED V3[XYZ])
-{
-	V3[X] = slMulFX(V1[Y],V2[Z]) - slMulFX(V1[Z], V2[Y]);
-    V3[Y] = -slMulFX(V1[X],V2[Z]) + slMulFX(V1[Z], V2[X]);
-    V3[Z] = slMulFX(V1[X],V2[Y]) - slMulFX(V1[Y], V2[X]);
-}
 
 //	Construct unit normal vector from two points
 void unit_normal(FIXED *p1, FIXED *p2, FIXED *unit, FIXED *scaled_unit)
@@ -85,49 +73,6 @@ void project_1D(field_2D *field, FIXED *scaled, FIXED *extent)
 		}
 	}
 }
-
-/*
-//	Projecting 2D points onto line defined by scaled normal
-void project_1D_bbox(b_box *box, FIXED scaled[XYZ], FIXED *extent)
-{
-	//	Writes an extent that described minimum and maximum extent of
-	//	projection of bounding box corners onto 1D line. Overlapping extents
-	//	will determine collision
-	
-	//	Calculate offsets based on game_object position, bounding box center offset
-	FIXED x_offset = *(box->center) + object[*(box->parent_ID)].position[X];
-	FIXED y_offset = *(box->center + 1) + object[*(box->parent_ID)].position[Y];
-	FIXED z_offset = *(box->center + 2) + object[*(box->parent_ID)].position[Z];
-	
-	//	Intialize value with dot product
-	FIXED value = slMulFX(scaled[X],*(box->corners) + x_offset) +
-			slMulFX(scaled[Y],*(box->corners + 1) + y_offset) +
-			slMulFX(scaled[Z],*(box->corners + 2) + z_offset);
-			
-	//	Initialzie extent
-	*(extent) = value;
-	*(extent + 1) = value;
-	
-	//	Add points to extent
-	for(int i = 1; i < 8; i++)
-	{
-		value = slMulFX(scaled[X],*(box->corners + 3*i) + x_offset) +
-			slMulFX(scaled[Y],*(box->corners + 3*i + 1) + y_offset) +
-			slMulFX(scaled[Z],*(box->corners + 3*i + 2) + z_offset);
-				
-		//	Check for max or min
-		if(value < *(extent))
-		{
-			//	Write min
-			*(extent) = value;
-		}
-		else if(value > *(extent + 1))
-		{
-			*(extent + 1) = value;
-		}
-	}
-}
-*/
 
 //	Checks for separating axis from two field_2D's. True if colliding.
 bool separate_2D(field_2D *field1, field_2D *field2)

@@ -7,11 +7,7 @@
 */
 
 #include "game_object.h"
-#include <jo/jo.h>
-#include "ZT/ZT_COMMON.h"
-#include "input.h"
-#include "timer.h"
-#include "collision.h"
+#include "separate_3D.h"
 
 //  Array of game objects
 int max_objects = 200;
@@ -67,6 +63,11 @@ void create_object(FIXED position[XYZ], ANGLE rot[XYZ], entity_t *ent)
 		
 		//	Point to entity_t
 		object[num_object-1].entity = ent;
+		
+		//	Assign bounding box
+		VECTOR center = {0, 0, 0};
+		create_bbox(&boxes[object[num_object-1].ID], center,
+				2 << 16, 2 << 16, 2 << 16, object[num_object-1].ID);
 	}
 }
 
@@ -95,6 +96,9 @@ void clone_object(int ID, int destination)
 	
 	//	Set Entity
 	object[destination].entity = object[ID].entity;
+	
+	//	Clone Bounding Box
+	clone_object(ID, destination);
 }
 
 //	Destroy Object
@@ -109,6 +113,9 @@ void destroy_object(int ID)
 	{
 		// Clone last object into destroyed object's lcoation
 		clone_object(num_object-1, ID);
+		
+		// Destroy old bounding box
+		destroy_bbox(ID);
 		
 		// Resize objects
 		num_object--;
@@ -185,49 +192,5 @@ void update_obj_position(void)
 	return;
 }
 
-/*
-//	Basic bounding box colission
-bool is_colliding(int x, int y, int z, int x_size, int y_size, int z_size)
-{
-	int index;
-	int x_collide = false;
-	int y_collide = false;
-	int z_collide = false;
 
-	for(index = 0; index < num_object; index++)
-	{
-		//	Reset values
-		x_collide = false;
-		y_collide = false;
-		z_collide = false;
-		
-		//	Check x
-		if(object[index].sx >= 0 && (JO_ABS(x-object[index].x) < (object[index].x_size*object[index].sx + x_size)/2))
-		{
-			x_collide = true;
-		}
-		
-		//	Check y
-		if(object[index].sy >= 0 && (JO_ABS(y-object[index].y) < (object[index].y_size*object[index].sy + y_size)/2))
-		{
-			y_collide = true;
-		}
-		
-		//	Check z
-		if(object[index].sz >= 0 && (JO_ABS(z-object[index].z) < (object[index].z_size*object[index].sz + z_size)/2))
-		{
-			z_collide = true;
-		}
-		
-		jo_printf(0, 2, "Collisions:\t%d\t%d\t%d ",(int) x_collide, (int) y_collide, (int) z_collide);
-		
-		//	Return if colliding
-		if(x_collide && y_collide && z_collide)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-*/
 

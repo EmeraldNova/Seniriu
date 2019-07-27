@@ -38,7 +38,7 @@
 
 #include "input.h"
 #include "game_object.h"
-#include "test2D.h"
+#include "collision.h"
 
 static int framenum = 0;
 static Uint8 old_tick = 0;
@@ -148,6 +148,7 @@ void main_loop(void)
 		//	Apply physics on objects
 		apply_accel_all(gravity);
 		is_rough_collide_all();
+		is_bbox_collide_all();
 		stop_collided();
 		update_obj_position();
 
@@ -185,7 +186,8 @@ void jo_main(void)
 
 	fadeIn();	//	Smooth background fade in
 
-	//slPrint("Go!",slLocate(19,0));
+	//	Initialize player colission
+	player_bbox_init();
 
 	main_loop();	//	Main loop of game
 }
