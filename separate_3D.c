@@ -25,6 +25,10 @@ void x_product(FIXED V1[XYZ], FIXED V2[XYZ], FIXED V3[XYZ])
 //	Resets rotation on corners given dimensions of bounding box
 void reset_corners(b_box *box)
 {
+	FIXED x_hold = 0;
+	FIXED y_hold = 0;
+	FIXED z_hold = 0;
+	
 	//	Reset Corners Before Rotation
 	box->corners[0][0] = -box->half[X];
 	box->corners[0][1] = -box->half[Y];
@@ -59,12 +63,17 @@ void reset_corners(b_box *box)
 	FIXED y_offset = box->center[Y] + object[(box->parent_ID)].position[Y];
 	FIXED z_offset = box->center[Z] + object[(box->parent_ID)].position[Z];
 	
-	//	Offset
-	for(int i = 0; i <= 8; i++)
+	//	Loop through corners to write new values
+	for(int i = 0; i < 8; i++)
 	{
-		box->corners[i][0] = box->corners[i][0] + x_offset; 
-		box->corners[i][1] = box->corners[i][1] + y_offset;
-		box->corners[i][2] = box->corners[i][2] + z_offset;
+		// Hold values
+		x_hold = (box->corners[i][0]);
+		y_hold = (box->corners[i][1]);
+		z_hold = (box->corners[i][2]);
+		
+		box->corners[i][0] = x_hold + x_offset; 
+		box->corners[i][1] = y_hold + y_offset;
+		box->corners[i][2] = z_hold + z_offset;
 	}
 }
 
@@ -94,9 +103,6 @@ void project_1D_bbox(b_box *box, FIXED scaled[XYZ], FIXED *extent)
 	//	Writes an extent that described minimum and maximum extent of
 	//	projection of bounding box corners onto 1D line. Overlapping extents
 	//	will determine collision
-	
-	//	Calculate corners for boundign box
-	reset_corners(box);
 	
 	//	Intialize value with dot product
 	FIXED value = slMulFX(scaled[X], box->corners[0][0]) +
@@ -169,7 +175,7 @@ bool separate_3D_bbox(b_box *box1, b_box *box2)
 	normal[5][1] = 0;
 	normal[5][2] = 1 << 16;
 	
-	/*
+	
 	//	Rotation Angles Box 1
 	ANGLE RX1 = object[box1->parent_ID].theta[X];
 	ANGLE RY1 = object[box1->parent_ID].theta[Y];
@@ -194,7 +200,7 @@ bool separate_3D_bbox(b_box *box1, b_box *box2)
 	slRotZ(RZ2);
 	slGetMatrix(R2);
 	slPopMatrix();
-	*/
+	
 	
 	//	Calculate Rotation Matrix Box 1
 	/*
@@ -238,13 +244,27 @@ bool separate_3D_bbox(b_box *box1, b_box *box2)
 	R2[2][2] = 32768*(slCos(RX2 + RY2) + slCos(RX2 - RY2));
 	*/
 
-	//	Apply rotation to face normals
-	//	R1 * normal[0]
-	//	R1 * normal[0]
-	//	R1 * normal[0]
-	//	R2 * normal[1]
-	//	R2 * normal[1]
-	//	R2 * normal[1]
+	//	Apply rotation to face normals box 1
+	normal[0][0] = R1[0][0];
+	normal[0][1] = R1[1][0];
+	normal[0][2] = R1[2][0];
+	normal[1][0] = R1[0][1];
+	normal[1][1] = R1[1][1];
+	normal[1][2] = R1[2][1];
+	normal[2][0] = R1[2][0];
+	normal[2][1] = R1[2][1];
+	normal[2][2] = R1[2][2];
+	
+	//	Apply rotation to face normals box 2
+	normal[3][0] = R2[0][0];
+	normal[3][1] = R2[1][0];
+	normal[3][2] = R2[2][0];
+	normal[4][0] = R2[0][1];
+	normal[4][1] = R2[1][1];
+	normal[4][2] = R2[2][1];
+	normal[5][0] = R2[2][0];
+	normal[5][1] = R2[2][1];
+	normal[5][2] = R2[2][2];
 	
 	//	Calculate cross products
 	x_product(normal[0], normal[3], normal[6]);

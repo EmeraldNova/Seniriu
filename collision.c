@@ -181,7 +181,7 @@ void is_rough_collide_all(void)
 	return;
 }
 
-//	Check if rough collding with object
+//	Check if bounding box colliding with object
 bool is_bbox_collide(b_box *box1, int ID2)
 {
 	return separate_3D_bbox(box1, &boxes[ID2]);
@@ -192,10 +192,14 @@ void is_bbox_collide_all(void)
 {
 	bool collide_hold;
 	b_box *box1;
+	FIXED point[XYZ];
+	FIXED rr = 0 << 16;
 	
 	//	Reset collision master
 	for(int ID = 0; ID < 201; ID++)
 	{
+		//	Calculate corners for bounding boxes
+		reset_corners(&boxes[ID]);
 		collision_master_bbox[ID] = false;
 	}
 	
@@ -204,7 +208,8 @@ void is_bbox_collide_all(void)
 	{
 		collide_hold = false;
 		
-		//	Differentiate between player boundign box and objects
+		
+		//	Differentiate between player bounding box and objects
 		if(ID1 < 0)
 		{
 			box1 = &player_bbox;
@@ -214,12 +219,33 @@ void is_bbox_collide_all(void)
 			box1 = &boxes[ID1];
 		}
 		
+		
 		//	Loop second, compare bounding boxes after ID1
 		for(int ID2 = ID1 + 1; ID2 < num_object; ID2++)
 		{
+			//	Reset collide hold
+			collide_hold = false;
+			
+			//	Check rough collision between boxes first
+			if(ID1 < 0)
+			{
+				rr = 58983; //	0.9 FIXED
+				point[X] = pl_position[X];
+				point[Y] = pl_position[Y];
+				point[Z] = pl_position[Z];
+			}
+			else
+			{
+				rr = r_radius[0];
+				point[X] = object[ID1].position[X];
+				point[Y] = object[ID1].position[Y];
+				point[Z] = object[ID1].position[Z];
+			}
+			
 			//	Only check if rough collision flagged for both
 			if(collision_master_rough[ID1+1]
-				&& collision_master_rough[ID2+1])
+				&& collision_master_rough[ID2+1]
+				&& is_rough_collide(point, rr, ID2))
 			{
 				collide_hold = is_bbox_collide(box1, ID2);
 			}
@@ -227,8 +253,8 @@ void is_bbox_collide_all(void)
 			//	Flag bounding box collision
 			if(collide_hold)
 			{
-				collision_master_bbox[ID1+1] = collide_hold;
-				collision_master_bbox[ID2+1] = collide_hold;
+				collision_master_bbox[ID1+1] = true;
+				collision_master_bbox[ID2+1] = true;
 			}
 		}
 	}
