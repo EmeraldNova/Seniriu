@@ -99,14 +99,9 @@ void gamepad_input(void)
 		}
 		if (jo_is_pad1_key_pressed(JO_KEY_X))
 		{
-			//	Iterate framerate
-			if (SynchConst == 1 )
+			if(num_object > 0)
 			{
-				SynchConst = (Sint8)3;
-			}
-			else
-			{
-				SynchConst -= (Sint8)1;
+				object[num_object - 1].ani = 1 - object[num_object - 1].ani;
 			}
 		}
 				

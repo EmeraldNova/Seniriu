@@ -1,7 +1,7 @@
 #ifndef ANORM_H
 #define ANORM_H
 
-VECTOR anorms[]=
+VECTOR ANORMS[]=
 {
     POStoFIXED(0, -1, 0),
     POStoFIXED(0.723608, -0.447221, 0.525724),

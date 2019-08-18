@@ -35,6 +35,9 @@ void create_object(FIXED position[XYZ], ANGLE rot[XYZ], entity_t *ent)
 		
 		//  Set alive
 		object[num_object-1].alive = true;
+		
+		//	Set default animation
+		object[num_object-1].ani = 0;
 
 		//  Set Position
 		object[num_object-1].position[X] = position[X];

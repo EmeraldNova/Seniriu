@@ -21,6 +21,8 @@ typedef struct {
 	
     //  Render flag
     bool alive;
+	//	Animation Number render flag (0 = default)
+	int ani;
 
     // Position
 	FIXED position[XYZ];	

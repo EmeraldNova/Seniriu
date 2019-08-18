@@ -35,6 +35,7 @@
 
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "animate.h"
 
 #include "input.h"
 #include "game_object.h"
@@ -55,6 +56,8 @@ Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 Sint32 gfsDirN;
 //static int BG;
 
+
+
 //	File access with calls to SGL structs and definitions
 void ztCDinit(void)
 {
@@ -63,11 +66,6 @@ void ztCDinit(void)
     GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;
     gfsDirN = GFS_Init(OPEN_MAX, gfsLibWork, &gfsDirTbl);
 }
-
-//	Framerate definitions (different integer types for different context)
-extern Sint8 SynchConst;
-Sint32 framerate;
-/****/
 
 
 /**Added by XL2 - Very basic function to display a 3D model **/
@@ -88,13 +86,24 @@ Uint32 nbModels = 1;
 void load_ref(void){
     /**ZTP stands for Z-Treme polygonal model**/
     void * currentAddress = (void*)LWRAM;
-	currentAddress = ztLoad3Dmodel((Sint8*)"TESTBOX.ZTP", currentAddress, &entities[0], false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"JELLY.ZTP", currentAddress, &entities[0], false);
 	r_radius[0] = calc_rough_radius(&entities[0]);
+	
+	//	Animations for Jelly
+	jelly_neutral.uniform = false;
+	jelly_neutral.arate[1] = 0;
+	jelly_neutral.startFrm = 1;
+	jelly_neutral.endFrm = 1;
+	jelly_neutral.currentFrm = jelly_neutral.startFrm  * ANIM_CONST;
+	jelly_damage.uniform = true;
+	jelly_damage.startFrm = 2;
+	jelly_damage.endFrm = 5;
+	jelly_damage.currentFrm = jelly_damage.startFrm  * ANIM_CONST;
 }
 
 //	Drawing objects (every frame)
 void my_draw(void)
-{
+{	
 	for(int ind = 0; ind < num_object; ind++)
 	{
 		slPushMatrix();		//	Advance matrix buffer pointer 1 step
@@ -111,7 +120,17 @@ void my_draw(void)
 		slScale(object[ind].scale[X],object[ind].scale[Y],
 			object[ind].scale[Z]);	
 	
-		display_model(object[ind].entity);			//	Displays model
+		if(object[ind].ani == 0)
+		{
+			//display_model(object[ind].entity);			//	Displays model
+			display_animated_model(&jelly_neutral, object[ind].entity);
+		}
+		else if(object[ind].ani == 1)
+		{
+			display_animated_model(&jelly_damage, object[ind].entity);
+		}
+		
+		
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
 	}
 
@@ -170,8 +189,8 @@ void jo_main(void)
 
 	//	Added by XL2 
 	fadeOut(true);			//	Fade out screen and blank background
-    SynchConst = (Sint8)1; 	//	Framerate control. 1/60 = 60 FPS, 2/60 = 30 FPS, etc.
-	framerate = 1;			//	Repeat framerate definition
+    SynchConst = (Sint8)2; 	//	Framerate control. 1/60 = 60 FPS, 2/60 = 30 FPS, etc.
+	framerate = 2;			//	Repeat framerate definition
 	slZdspLevel(7);			//	Define frustrum culling near plane
     /****/
 	
