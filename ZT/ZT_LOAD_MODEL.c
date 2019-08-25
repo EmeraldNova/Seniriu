@@ -3,6 +3,7 @@
 #include <jo/jo.h>
 
 entity_t entities[MAX_MODELS];
+Uint32 pDataSizes[MAX_MODELS];
 unsigned int gouraudCounter;
 
 /**
@@ -143,8 +144,9 @@ void * loadPDATA(void * startAddress, entity_t * model, modelData_t * modelData)
     return workAddress;
 }
 
-void * ztLoad3Dmodel(Sint8 * filename, void * startAddress, entity_t * model, Bool UseRealtimeGouraud)
+void * ztLoad3Dmodel(Sint8 * filename, void * startAddress, int entity_ID, Bool UseRealtimeGouraud)
 {
+	entity_t *model = &entities[entity_ID];
     //memset_l((void*)startAddress,0x0000, (0xFFFE - ((Uint32)startAddress-(Uint32)LWRAM)));  //Not 100% necessary, since data can just be overwritten, but good for testing and see how much data a level takes
     void * workAddress;
     workAddress=startAddress;
@@ -168,19 +170,19 @@ void * ztLoad3Dmodel(Sint8 * filename, void * startAddress, entity_t * model, Bo
 	model->nbFrames=bufModel.nbFrames;
 
     /**Turns on the graphics (mainly for debugging, remove it if everything works)**/
- //   slScrAutoDisp(NBG3ON);
-   slPrint("NOW LOADING...", slLocate(5, 5));    slPrint((char*)filename, slLocate(5, 6));
+	//   slScrAutoDisp(NBG3ON);
+   //slPrint("NOW LOADING...", slLocate(5, 5));    slPrint((char*)filename, slLocate(5, 6));
    fadeIn();
 
 
     /**Load the texture list (using an offset to allow DMA transfer)**/
-	slPrint("LOADING TEXTURES", slLocate(5, 8));
+	//slPrint("LOADING TEXTURES", slLocate(5, 8));
     GFS_Load(fid, 0, (void*)startAddress, bufModel.TEXT_SIZE+(sizeof(modelData_t)));
     Uint16 first_texture = loadTextures(startAddress, &bufModel);
 
 
     /**Load PDATA**/
-	slPrint("LOADING PDATA   ", slLocate(5, 8));
+	//slPrint("LOADING PDATA   ", slLocate(5, 8));
     Sint32 bytesOff = (bufModel.TEXT_SIZE+(sizeof(modelData_t)))/2048;
 
     /****Should really just take the filesize here...*****/
@@ -188,11 +190,15 @@ void * ztLoad3Dmodel(Sint8 * filename, void * startAddress, entity_t * model, Bo
     bytesOff = bufModel.TEXT_SIZE+(sizeof(modelData_t)) - (bytesOff*2048);
     workAddress = (void*)(workAddress + bytesOff);
 
+	//	Saves pdata size in memory to malloc and free copies later
+	//	(Added by Emerald Nova)
+	pDataSizes[entity_ID] = (Uint32)workAddress;
     workAddress = loadPDATA((void*)workAddress, model, &bufModel);
+	pDataSizes[entity_ID] = (Uint32)workAddress - pDataSizes[entity_ID];
 
 
     /**Set textures**/
-	slPrint("SETTING TEXTURES", slLocate(5, 8));
+	//slPrint("SETTING TEXTURES", slLocate(5, 8));
     setTextures(first_texture, model, bufModel.TOTAL_MESH, UseRealtimeGouraud);
 
     /**Setting animation data**/
@@ -201,7 +207,7 @@ void * ztLoad3Dmodel(Sint8 * filename, void * startAddress, entity_t * model, Bo
 	jo_clear_screen();
 
 
-//	fadeOut(0);
+	//fadeOut(0);
 
     return workAddress;
 }

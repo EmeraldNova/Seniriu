@@ -57,7 +57,7 @@ void forward_target(FIXED dist)
 //  Handle Input from Gamepad
 void gamepad_input(void)
 {
-	int wait_frames = 15;
+	int wait_frames = 10;
 	FIXED move_inc = 6554; //	0.1 FIXED
 
 	//	Poll for gamepad
@@ -91,7 +91,7 @@ void gamepad_input(void)
 		if (jo_is_pad1_key_pressed(JO_KEY_A))
 		{
 			ANGLE draw_theta[XYZ] = {theta[X],-theta[Y],theta[Z]};
-			create_object(target, draw_theta, &entities[0]);
+			create_object(target, draw_theta, 0);
 		}
 		if (jo_is_pad1_key_pressed(JO_KEY_B))
 		{
@@ -175,7 +175,7 @@ void print_orientation(void)
 			slPrint("No Box Colliding    ",slLocate(20,8));
 		}		
 		
-		print_corners(num_object-1);
+		//print_corners(num_object-1);
 	}
 }
 

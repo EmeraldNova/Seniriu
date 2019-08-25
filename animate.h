@@ -5,8 +5,11 @@
 
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "game_object.h"
 
 #define ANIM_CONST (8)
+//	Maximum number of animations supported by a model
+#define MAX_ANI (50)		
 
 typedef struct
 {
@@ -18,16 +21,20 @@ typedef struct
     Uint8 endFrm;
 } animationControl;
 
-//	Jelly animation
-animationControl jelly_neutral;
-animationControl jelly_damage;
+//	Animation master list, row = entity, col = animation
+extern animationControl animationMaster[MAX_MODELS][MAX_ANI];
+/*
+	0	-	Idle
+	1	-	Walk
+	2	-	Run
+*/
 
 //	Framerate definitions (different integer types for different context)
 extern Sint8 SynchConst;
 Sint32 framerate;
 /****/
 
-void display_animated_model(animationControl * animCtrl, entity_t * currentModel);
+void display_animated_model(game_object *obj, int ani_ID);
 
 
 #endif

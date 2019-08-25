@@ -171,6 +171,9 @@ typedef struct
 
 /**Store all your PDATA meshes here**/
 extern entity_t entities[MAX_MODELS];
+//	Stores sizes of pData for corresponding entities for malloc/freeing
+//	(Added by Emerald Nova)
+extern Uint32 pDataSizes[MAX_MODELS];
 extern unsigned int gouraudCounter;
 
 extern  request	requests[80];
@@ -184,7 +187,7 @@ void * loadPDATA(void * startAddress, entity_t * model, modelData_t * modelData)
 void * loadAnimations(void * startAddress, entity_t * model, modelData_t * modelData);
 
 /** This function loads a 3d polygonal model. Returns the last address in LWRAM (to allow loading multiple meshes)**/
-void *      ztLoad3Dmodel(Sint8 * filename, void * startAddress, entity_t * model,  Bool UseRealtimeGouraud);
+void *      ztLoad3Dmodel(Sint8 * filename, void * startAddress, int entity_ID, Bool UseRealtimeGouraud);
 //Notice: In loading order, models come first.
 void * ztModelRequest(char * dirname, Sint8 * name, void * startAddress, entity_t * model, Uint16 rqNum, Bool dirChange);
 

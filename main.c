@@ -86,19 +86,20 @@ Uint32 nbModels = 1;
 void load_ref(void){
     /**ZTP stands for Z-Treme polygonal model**/
     void * currentAddress = (void*)LWRAM;
-	currentAddress = ztLoad3Dmodel((Sint8*)"JELLY.ZTP", currentAddress, &entities[0], false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"JELLY.ZTP", currentAddress, 0, false);
 	r_radius[0] = calc_rough_radius(&entities[0]);
 	
 	//	Animations for Jelly
-	jelly_neutral.uniform = false;
-	jelly_neutral.arate[1] = 0;
-	jelly_neutral.startFrm = 1;
-	jelly_neutral.endFrm = 1;
-	jelly_neutral.currentFrm = jelly_neutral.startFrm  * ANIM_CONST;
-	jelly_damage.uniform = true;
-	jelly_damage.startFrm = 2;
-	jelly_damage.endFrm = 5;
-	jelly_damage.currentFrm = jelly_damage.startFrm  * ANIM_CONST;
+	//	Idle
+	animationMaster[0][0].uniform = true;
+	animationMaster[0][0].startFrm = 1;
+	animationMaster[0][0].endFrm = 2;
+	animationMaster[0][0].currentFrm = animationMaster[0][0].startFrm  * ANIM_CONST;
+	//	Walk
+	animationMaster[0][1].uniform = true;
+	animationMaster[0][1].startFrm = 3;
+	animationMaster[0][1].endFrm = 6;
+	animationMaster[0][1].currentFrm = animationMaster[0][1].startFrm  * ANIM_CONST;
 }
 
 //	Drawing objects (every frame)
@@ -120,16 +121,9 @@ void my_draw(void)
 		slScale(object[ind].scale[X],object[ind].scale[Y],
 			object[ind].scale[Z]);	
 	
-		if(object[ind].ani == 0)
-		{
-			//display_model(object[ind].entity);			//	Displays model
-			display_animated_model(&jelly_neutral, object[ind].entity);
-		}
-		else if(object[ind].ani == 1)
-		{
-			display_animated_model(&jelly_damage, object[ind].entity);
-		}
-		
+		//	Animation
+		display_animated_model(&object[ind], object[ind].ani);
+		//slPutPolygon((XPDATA*)object[0].pDataStart);
 		
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
 	}
@@ -139,6 +133,13 @@ void my_draw(void)
     //slPrintFX(toFIXED(jo_3d_get_vertices_count()), slLocate(0,2));
     //slPrintFX(toFIXED(jo_3d_get_displayed_polygon_count()), slLocate(0,3));
 	//slPrintFX(toFIXED(framerate), slLocate(0,4));
+
+	//	Print pData infoslPutPolygon((XPDATA*)entities[0].pol[0]);
+	//jo_printf(0, 10, "pdm:(%10i)", (int)pdataMaster[num_object-1][0]);
+	//jo_printf(20, 10, "pds:(%10i)", (int)object[num_object-1].pDataStart);
+	//jo_printf(0, 11, "size:(%10i)", (int)pDataSizes[0]);
+	//jo_printf(0, 12, "epd+5:(%10i)", (int)(*(int*)(entities[0].pol[0]+5)));
+	//jo_printf(20, 12, "opd+5:(%10i)", (int)(*(int*)(object[0].pDataStart+5)));
 
     return;
 }

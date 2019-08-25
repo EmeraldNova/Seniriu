@@ -23,54 +23,62 @@ void stop(int ID)
 }
 
 //	Creates a game_object and add it to the objects array
-void create_object(FIXED position[XYZ], ANGLE rot[XYZ], entity_t *ent)
+void create_object(FIXED position[XYZ], ANGLE rot[XYZ], int entity_ID)
 {
 	if(num_object < max_objects)
 	{
-		//	Increment object number
-		num_object++;
-		
 		//	ID
-		object[num_object-1].ID = num_object-1;
+		object[num_object].ID = num_object;
 		
 		//  Set alive
-		object[num_object-1].alive = true;
+		object[num_object].alive = true;
 		
 		//	Set default animation
-		object[num_object-1].ani = 0;
+		object[num_object].ani = 0;
 
 		//  Set Position
-		object[num_object-1].position[X] = position[X];
-		object[num_object-1].position[Y] = position[Y];
-		object[num_object-1].position[Z] = position[Z];
+		object[num_object].position[X] = position[X];
+		object[num_object].position[Y] = position[Y];
+		object[num_object].position[Z] = position[Z];
 		
 		//  Set Velocity
-		object[num_object-1].velocity[X] = 0;
-		object[num_object-1].velocity[Y] = 0;
-		object[num_object-1].velocity[Z] = 0;
+		object[num_object].velocity[X] = 0;
+		object[num_object].velocity[Y] = 0;
+		object[num_object].velocity[Z] = 0;
 
 		//  Set Rotation
-		object[num_object-1].theta[X] = rot[X];
-		object[num_object-1].theta[Y] = rot[Y];
-		object[num_object-1].theta[Z] = rot[Z];
+		object[num_object].theta[X] = rot[X];
+		object[num_object].theta[Y] = rot[Y];
+		object[num_object].theta[Z] = rot[Z];
 		
 		//  Set Rotation Speed
-		object[num_object-1].omega[X] = 0;
-		object[num_object-1].omega[Y] = 0;
-		object[num_object-1].omega[Z] = 0;
+		object[num_object].omega[X] = 0;
+		object[num_object].omega[Y] = 0;
+		object[num_object].omega[Z] = 0;
 		
 		//  Set Scale
-		object[num_object-1].scale[X] = 1 << 16;
-		object[num_object-1].scale[Y] = 1 << 16;
-		object[num_object-1].scale[Z] = 1 << 16;
+		object[num_object].scale[X] = 1 << 16;
+		object[num_object].scale[Y] = 1 << 16;
+		object[num_object].scale[Z] = 1 << 16;
 		
 		//	Point to entity_t
-		object[num_object-1].entity = ent;
+		object[num_object].entity_ID = entity_ID;
+		object[num_object].entity = &entities[entity_ID];
+		
+		//	Copy pData
+		pdataMaster[object[num_object].ID][0] = jo_malloc((int)pDataSizes[entity_ID]);
+		slDMACopy((XPDATA*)entities[entity_ID].pol[0],
+					pdataMaster[object[num_object].ID][0],
+					pDataSizes[entity_ID]);
+		object[num_object].pDataStart = pdataMaster[object[num_object].ID][0];
 		
 		//	Assign bounding box
 		VECTOR center = {0, 0, 0};
-		create_bbox(&boxes[object[num_object-1].ID], center,
-				2 << 16, 2 << 16, 2 << 16, object[num_object-1].ID);
+		create_bbox(&boxes[object[num_object].ID], center,
+				1 << 16, 1 << 16, 1 << 16, object[num_object].ID);
+				
+		//	Increment object number
+		num_object++;
 	}
 }
 
@@ -114,11 +122,14 @@ void destroy_object(int ID)
 	}
 	else
 	{
-		// Clone last object into destroyed object's lcoation
-		clone_object(num_object-1, ID);
+		//	Destroy pData copy
+		jo_free(pdataMaster[ID][0]);
 		
 		// Destroy old bounding box
 		destroy_bbox(ID);
+		
+		// Clone last object into destroyed object's lcoation
+		clone_object(num_object-1, ID);
 		
 		// Resize objects
 		num_object--;

@@ -35,19 +35,31 @@ typedef struct {
 	//  Set Scale
 	FIXED scale[XYZ];
 	
+	//	Entity ID
+	int entity_ID;
+	
 	//	Pointer to entity to render
 	entity_t *entity;
+	
+	//	Pointer to entity to render
+	XPDATA *pDataStart;
+	
+	//	Animation Control Frames
+	Uint16 currentFrm;
+    Uint8 currentKeyFrm;
 }game_object;
 
 //  Array of game objects
 extern int max_objects;
 int num_object;
 game_object object[200];	//	Same as max objects
+//	Pointer to copy of XPDATA 
+XPDATA *pdataMaster[200][MAX_MESHES];
 
 
 //	Functions
 void stop(int ID);
-void create_object(FIXED position[XYZ], ANGLE rot[XYZ], entity_t *ent);
+void create_object(FIXED position[XYZ], ANGLE rot[XYZ], int entity_ID);
 void clone_object(int ID, int destination);
 void destroy_object(int ID);
 int closest_object(FIXED x, FIXED y, FIXED z, FIXED threshold);
