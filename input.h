@@ -12,7 +12,7 @@
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 #include "game_object.h"
-#include "timer.h"
+#include "room.h"
 
 //	Orientation data
 extern ANGLE theta[XYZ];		//	Camera angle away from -Z
@@ -22,12 +22,21 @@ extern FIXED tar_dist;			//	Default interaction target distance
 extern FIXED tar_sense;			//	Distance from target allow for interaction
 extern FIXED target[XYZ];		//	Interaction target position
 
+//	Camera (player) height
+extern FIXED cam_default_height;
+extern FIXED cam_height;
+
+//	Player movement
+extern FIXED move_inc;
+
 //	Repeat Input Delay
 extern FIXED input_delay;
 extern FIXED last_input;
 
 //Uint8 get_time(void);
 extern Sint8 SynchConst;
+
+//	Functions
 void add_rel_pos(FIXED x, FIXED y, FIXED z);
 void gamepad_input(void);
 void print_orientation(void);

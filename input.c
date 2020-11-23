@@ -7,13 +7,10 @@
 */
 
 #include "input.h"
-#include "collision.h"
 
 //	Orientation data
 //	Camera angle away from -Z
 ANGLE theta[XYZ] = {DEGtoANG(0.0),DEGtoANG(0.0),DEGtoANG(0.0)};
-//	Camera (player) height
-FIXED height = toFIXED(1.8);
 //	Camera Position
 FIXED pl_position[XYZ] = {0,0,0};				
 //	Default interaction target distance
@@ -25,8 +22,14 @@ FIXED target[XYZ] = {0,0,5 << 16};
 
 //	Repeat Input Delay
 FIXED input_delay = 13107;	//	0.2 FIXED
-FIXED last_input = -1 << 16;
-extern Sint8 SynchConst;
+FIXED last_input = -(1 << 16);
+
+//	PLayer camera hieght
+FIXED cam_default_height;
+FIXED cam_height;
+
+//	Player movement
+FIXED move_inc;
 
 //	Add relative change to position coordinate
 void add_rel_pos(FIXED x, FIXED y, FIXED z)
@@ -34,10 +37,12 @@ void add_rel_pos(FIXED x, FIXED y, FIXED z)
 	//	Y is invariant under y-axis rotation
 	pl_position[Y] += y;
 	//	Floor is 0
+	/*
 	if(pl_position[Y]>0)
 	{
 		pl_position[Y] = 0;
 	}
+	*/
 	
 	//	Add to coordinate according to rotation
 	pl_position[X] += slMulFX(x,slCos(theta[Y])) + slMulFX(z,slSin(theta[Y]));
@@ -57,12 +62,39 @@ void forward_target(FIXED dist)
 //  Handle Input from Gamepad
 void gamepad_input(void)
 {
-	int wait_frames = 10;
-	FIXED move_inc = 6554; //	0.1 FIXED
+	/*
+		Gamepad Input
+		
+		Parse player input
+	*/
+	
+	//	Set default height
+	cam_default_height = slMulFX(toFIXED(1.8),scale_factor);
+	
+	//	Set speed of movement
+	move_inc = slMulFX(8000,scale_factor);
 
 	//	Poll for gamepad
 	if (!jo_is_pad1_available())
 		return ;
+	
+	//	Speed Modifier
+	cam_height = cam_default_height;
+	FIXED speed = move_inc;
+	if (jo_is_pad1_key_pressed(JO_KEY_B))
+	{
+		//	Running
+		speed *= 3;
+		cam_height -= slMulFX(toFIXED(0.05),scale_factor);
+	}
+	if (jo_is_pad1_key_pressed(JO_KEY_Y))
+	{
+		//	Sneaking
+		speed /= 4;
+		cam_height -= slMulFX(toFIXED(0.8),scale_factor);;
+	}
+	move_inc = speed;
+		
 	
 	//	Directional
 	if (jo_is_pad1_key_pressed(JO_KEY_UP))
@@ -70,13 +102,13 @@ void gamepad_input(void)
     if (jo_is_pad1_key_pressed(JO_KEY_DOWN))
 		add_rel_pos(0,0,-move_inc);
 	if (jo_is_pad1_key_pressed(JO_KEY_LEFT))
-		add_rel_pos(-move_inc,0,0);
+		theta[Y] -= (DEGtoANG(3.0));
     if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
-		add_rel_pos(move_inc,0,0);
+		theta[Y] += (DEGtoANG(3.0));
     if (jo_is_pad1_key_pressed(JO_KEY_L))
-		theta[Y] -= (DEGtoANG(1.0));
+		add_rel_pos(-move_inc,0,0);
     if (jo_is_pad1_key_pressed(JO_KEY_R))
-		theta[Y] += (DEGtoANG(1.0));
+		add_rel_pos(move_inc,0,0);
 	if (jo_is_pad1_key_pressed(JO_KEY_Z))
 		add_rel_pos(0,-move_inc,0);
     if (jo_is_pad1_key_pressed(JO_KEY_C))
@@ -86,7 +118,8 @@ void gamepad_input(void)
 	forward_target(tar_dist);
 	
 	//	Button Presses
-	if(time > last_input + input_delay)
+	/*
+	if(time_in_seconds > last_input + input_delay)
 	{
 		if (jo_is_pad1_key_pressed(JO_KEY_A))
 		{
@@ -106,8 +139,9 @@ void gamepad_input(void)
 		}
 				
 		//	Set last input time
-		last_input = time;
+		last_input = time_in_seconds;
 	}
+	*/
 }
 
 
@@ -116,9 +150,9 @@ void print_orientation(void)
 {
 	//	Timer
 	slPrint("Time:",slLocate(0,1));
-	slPrintFX(time,slLocate(6,1));
+	slPrintFX(time_in_seconds,slLocate(6,1));
 	slPrint("Framerate:",slLocate(19,1));
-	slPrintFX(slDivFX(dt,1 << 16),slLocate(29,1));
+	slPrintFX(slDivFX(delta_time,1 << 16),slLocate(29,1));
 	slPrint("FPS",slLocate(37,1));
 	
 	
@@ -131,14 +165,17 @@ void print_orientation(void)
 	slPrintFX(slAng2FX(theta[X]),slLocate(13,3));
 	slPrintFX(slAng2FX(theta[Y]),slLocate(13,4));
 	slPrintFX(slAng2FX(theta[Z]),slLocate(13,5));
+	/*
 	//	Target
 	slPrintFX(target[X],slLocate(26,3));
 	slPrintFX(target[Y],slLocate(26,4));
 	slPrintFX(target[Z],slLocate(26,5));
+	*/
 	
 	//	First object check
 	if(num_object > 0)
 	{
+		/*
 		slPrint("Position: ",slLocate(0,6));
 		slPrintFX(object[num_object-1].position[Y],slLocate(10,6));
 		slPrint("Velocity: ",slLocate(0,7));
@@ -176,6 +213,7 @@ void print_orientation(void)
 		}		
 		
 		//print_corners(num_object-1);
+		*/
 	}
 }
 

@@ -8,6 +8,7 @@
 
 #include "collision.h"
 
+
 FIXED r_radius[1] = {0};
 bool collision_master_rough[201];
 bool collision_master_bbox[201];

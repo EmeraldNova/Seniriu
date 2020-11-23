@@ -1,7 +1,10 @@
 /**XL2 Animation Interpolation system with ANORM.h lookup table**/
 
 #include "animate.h"
+//	Any attempt to sanitize this include will break the game. Likely due to a lack of ANORM.c
 #include "ZT/ANORM.h"
+
+Sint32 framerate;
 
 //	Animation master list, row = entity, col = animation
 animationControl animationMaster[MAX_MODELS][MAX_ANI];

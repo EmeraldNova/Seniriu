@@ -9,9 +9,9 @@
 #ifndef __SEPARATE_3D_H__
 #define __SEPARATE_3D_H__
 
-#include "separate.h"
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "separate.h"
 #include "game_object.h"
 
 //	Bounding Box
@@ -30,10 +30,10 @@ typedef struct {
 }b_box;
 
 //	Collection of bounding boxes
-b_box boxes[200];
+extern b_box boxes[200];
 
 //	Player bounding box
-b_box player_bbox;
+extern b_box player_bbox;
 
 void x_product(FIXED V1[XYZ], FIXED V2[XYZ], FIXED V3[XYZ]);
 void reset_corners(b_box *box);

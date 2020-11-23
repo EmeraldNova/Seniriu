@@ -11,8 +11,11 @@
 
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "separate_3D.h"
 #include "input.h"
-#include "timer.h"
+
+
+#define MAX_OBJECTS (10)
 
 //  Game Object containing necessary items for rendering
 typedef struct {
@@ -51,10 +54,10 @@ typedef struct {
 
 //  Array of game objects
 extern int max_objects;
-int num_object;
-game_object object[200];	//	Same as max objects
+extern int num_object;
+extern game_object object[MAX_OBJECTS];	//	Same as max objects
 //	Pointer to copy of XPDATA 
-XPDATA *pdataMaster[200][MAX_MESHES];
+extern XPDATA *pdataMaster[MAX_OBJECTS][MAX_MESHES];
 
 
 //	Functions

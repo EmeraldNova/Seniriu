@@ -7,12 +7,12 @@
 */
 
 #include "game_object.h"
-#include "separate_3D.h"
 
 //  Array of game objects
-int max_objects = 200;
+int max_objects = MAX_OBJECTS;
 int num_object = 0;
-game_object object[200];	//	Same as max objects
+game_object object[MAX_OBJECTS];	//	Same as max objects
+XPDATA *pdataMaster[MAX_OBJECTS][MAX_MESHES];
 
 //	Stops game object
 void stop(int ID)
@@ -162,13 +162,13 @@ int closest_object(FIXED x, FIXED y, FIXED z, FIXED threshold)
 void apply_accel(int ID, FIXED accel[XYZ])
 {	
 	//	Change velocities
-	object[ID].velocity[X] = object[ID].velocity[X] + slMulFX(dt,accel[X]);
-	object[ID].velocity[Z] = object[ID].velocity[Z] + slMulFX(dt,accel[Z]);
+	object[ID].velocity[X] = object[ID].velocity[X] + slMulFX(delta_time,accel[X]);
+	object[ID].velocity[Z] = object[ID].velocity[Z] + slMulFX(delta_time,accel[Z]);
 	
 	//	Remove y acceleration if on floor
 	if(object[ID].position[Y] < 0)
 	{
-		object[ID].velocity[Y] = object[ID].velocity[Y] + slMulFX(dt,accel[Y]);
+		object[ID].velocity[Y] = object[ID].velocity[Y] + slMulFX(delta_time,accel[Y]);
 	}
 	
 	return;
@@ -191,9 +191,9 @@ void update_obj_position(void)
 	for(int ID = 0; ID < num_object; ID++)
 	{
 		//	Update object position
-		object[ID].position[X] = object[ID].position[X] + slMulFX(dt,object[ID].velocity[X]);
-		object[ID].position[Y] = object[ID].position[Y] + slMulFX(dt,object[ID].velocity[Y]);
-		object[ID].position[Z] = object[ID].position[Z] + slMulFX(dt,object[ID].velocity[Z]);
+		object[ID].position[X] = object[ID].position[X] + slMulFX(delta_time,object[ID].velocity[X]);
+		object[ID].position[Y] = object[ID].position[Y] + slMulFX(delta_time,object[ID].velocity[Y]);
+		object[ID].position[Z] = object[ID].position[Z] + slMulFX(delta_time,object[ID].velocity[Z]);
 
 		//	Floor is 0
 		if(object[ID].position[Y] >= 0)

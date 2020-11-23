@@ -7,7 +7,6 @@
 */
 
 #include <jo/jo.h>
-#include "game_object.h"
 
 //  Initialize Camera
 static jo_camera cam;

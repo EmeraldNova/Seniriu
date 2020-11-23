@@ -35,40 +35,33 @@
 
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "separate_3D.h"
 #include "animate.h"
-
 #include "input.h"
 #include "game_object.h"
 #include "collision.h"
+#include "room.h"
 
-static int framenum = 0;
-static Uint8 old_tick = 0;
-static Uint8 tick = 0;
+
+//static int framenum = 0;
+//static Uint8 old_tick = 0;
+//static Uint8 tick = 0;
 
 
 /**Functions/variables added by XL2 **/
 /**Added by XL2 to use my own CD loading functions**/
+
 #define     OPEN_MAX    (Sint32)5
 #define     DIR_MAX     (Sint32)25
 GfsDirTbl gfsDirTbl;
 GfsDirName gfsDirName[DIR_MAX];
 Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
 Sint32 gfsDirN;
-//static int BG;
 
+//	Track loading addresses in LWRAM
+void * currentAddress;
 
-
-//	File access with calls to SGL structs and definitions
-void ztCDinit(void)
-{
-    GFS_DIRTBL_TYPE(&gfsDirTbl) = GFS_DIR_NAME;
-    GFS_DIRTBL_DIRNAME(&gfsDirTbl) = gfsDirName;
-    GFS_DIRTBL_NDIR(&gfsDirTbl) = DIR_MAX;
-    gfsDirN = GFS_Init(OPEN_MAX, gfsLibWork, &gfsDirTbl);
-}
-
-
-/**Added by XL2 - Very basic function to display a 3D model **/
+//	Added by XL2 - Very basic function to display a 3D model
 void display_model(entity_t * model)
 {
     int i;
@@ -77,15 +70,30 @@ void display_model(entity_t * model)
 	   slPutPolygon((PDATA*)model->pol[i]);
     }
 }
-/**End of added functions and global variables**/
+//	End of added functions and global variables
+
 
 //	Number of models to load
 Uint32 nbModels = 1;
 
+
 //	Load 3D object
 void load_ref(void){
-    /**ZTP stands for Z-Treme polygonal model**/
+	/*
+		Load References
+		
+		Loads 3D models
+	*/
+	
+	//	Start loading in LWRAM beginning
     void * currentAddress = (void*)LWRAM;
+	
+	//	Load rooms
+	currentAddress = ztLoad3Dmodel((Sint8*)"COR1W.ZTP", currentAddress, 0, false);
+	
+	
+	/*
+	//	Load Jelly enemy
 	currentAddress = ztLoad3Dmodel((Sint8*)"JELLY.ZTP", currentAddress, 0, false);
 	r_radius[0] = calc_rough_radius(&entities[0]);
 	
@@ -100,33 +108,48 @@ void load_ref(void){
 	animationMaster[0][1].startFrm = 3;
 	animationMaster[0][1].endFrm = 6;
 	animationMaster[0][1].currentFrm = animationMaster[0][1].startFrm  * ANIM_CONST;
+	*/
+	
+	return;
 }
+
 
 //	Drawing objects (every frame)
 void my_draw(void)
 {	
+	/*
+		My Draw
+		
+		Draws all objects
+	*/
+	
+	//	Draw Rooms
+	draw_rooms();
+	
+	//	Loop through objects
 	for(int ind = 0; ind < num_object; ind++)
 	{
 		slPushMatrix();		//	Advance matrix buffer pointer 1 step
-
+		
 		//	Rotate perspective 
-			slRotY(-theta[Y]);	
+		slRotY(-theta[Y]);	
 		//	Translate draw location
 		slTranslate(object[ind].position[X] - pl_position[X],
-			object[ind].position[Y] - pl_position[Y],
+			object[ind].position[Y] - pl_position[Y] + cam_height,
 			object[ind].position[Z] - pl_position[Z]);		
 		//	Rotate object
-			slRotY(-object[ind].theta[Y]);	
+		slRotY(-object[ind].theta[Y]);	
 		//	Sets scale of 3D draw, larger numbers draw bigger		
 		slScale(object[ind].scale[X],object[ind].scale[Y],
 			object[ind].scale[Z]);	
 	
 		//	Animation
-		display_animated_model(&object[ind], object[ind].ani);
-		//slPutPolygon((XPDATA*)object[0].pDataStart);
+		//display_animated_model(&object[ind], object[ind].ani);
+		slPutPolygon((XPDATA*)object[ind].pDataStart);
 		
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
 	}
+	
 
 	//	Print polygon info
 	//slPrintFX(toFIXED(jo_3d_get_polygon_count()), slLocate(0,1));
@@ -151,9 +174,10 @@ void main_loop(void)
 	
 	while(1)
 	{
+		
 		//	Time
 		framerate = (int)SynchConst;
-		timer();
+		jo_fixed_point_time();
 		
 		//	Pop matrix to unit matrix at pointer '0'
 		slUnitMatrix(0);	
@@ -166,48 +190,129 @@ void main_loop(void)
 		print_orientation();
 
 		//	Apply physics on objects
-		apply_accel_all(gravity);
-		is_rough_collide_all();
-		is_bbox_collide_all();
-		stop_collided();
-		update_obj_position();
+		//apply_accel_all(gravity);
+		//is_rough_collide_all();
+		//is_bbox_collide_all();
+		//stop_collided();
+		//update_obj_position();
 
 		//  Draw Objects
 		my_draw();
+		
 		
 		//	Force screen blanking to wait until events are done processing
 		slSynch();			
 	}
 }
 
+
+void load_rooms_object()
+{
+	/*
+		Load Rooms
+		
+		Manually Load room objects for display
+	*/
+	
+	//	Grid spacing
+	FIXED grid = 10<<16;
+	
+	//	Location to place room
+	FIXED room_loc[XYZ];
+	FIXED room_angle[XYZ];
+	
+	//	Room 1
+	room_loc[X] = 0;
+	room_loc[Y] = 0<<16;
+	room_loc[Z] = 0*grid;
+	room_angle[X] = DEGtoANG(90.0);
+	room_angle[Y] = 0;
+	room_angle[Z] = 0;
+	create_object(room_loc, room_angle, 0);
+	
+	//	Room 2
+	room_loc[X] = 0;
+	room_loc[Y] = 0<<16;
+	room_loc[Z] = 1*grid;
+	room_angle[X] = 0;
+	room_angle[Y] = 0;
+	room_angle[Z] = 0;
+	create_object(room_loc, room_angle, 0);
+	
+	//	Room 3
+	room_loc[X] = 0;
+	room_loc[Y] = 0<<16;
+	room_loc[Z] = 2*grid;
+	room_angle[X] = 0;
+	room_angle[Y] = 0;
+	room_angle[Z] = 0;
+	create_object(room_loc, room_angle, 0);
+	
+	//	Room 4
+	room_loc[X] = 0;
+	room_loc[Y] = 0<<16;
+	room_loc[Z] = 3*grid;
+	room_angle[X] = -DEGtoANG(90.0);
+	room_angle[Y] = 0;
+	room_angle[Z] = 0;
+	create_object(room_loc, room_angle, 0);
+	
+	return;
+}
+
+
 void jo_main(void)
 {
+	
+	
 	//  Initialize engine with black background
 	jo_core_init(JO_COLOR_Black);	
+	
+	//*(volatile unsigned long *)0x20200000 = 0xDEADBEEF;
+	//while (true) { }
+	
 	//test2D_init();
 	//test2D_reset();
 	//test2D_loop();
+
+	
 
 	//	Added by XL2 
 	fadeOut(true);			//	Fade out screen and blank background
     SynchConst = (Sint8)2; 	//	Framerate control. 1/60 = 60 FPS, 2/60 = 30 FPS, etc.
 	framerate = 2;			//	Repeat framerate definition
+	slDynamicFrame(ON);		//	Dynamic framerate
 	slZdspLevel(7);			//	Define frustrum culling near plane
-    /****/
+    //	FOV
+	slPerspective(DEGtoANG(90.0));
 	
-	//	Shoehorn in Background Layer
-	// BG = jo_sprite_add_tga(JO_ROOT_DIR, "BGTREE1.TGA", JO_COLOR_Transparent);
-	// jo_set_background_sprite(BG, 0, 0); 	
+	//	Background Layer
+	jo_img bg;
+    bg.data = NULL;
+    jo_tga_loader(&bg, "BG", "BG2.TGA", JO_COLOR_Transparent);
+    jo_set_background_sprite(&bg, 0, 0);
+    jo_free_img(&bg);
+	
 
-	/**XL2**/
-	ztCDinit(); 	//	Prepare file system for loading things in directory
-	load_ref();		//	Load 3D Object
-	slScrAutoDisp(NBG0ON | NBG1ON | NBG3ON | SPRON);	//	?
+	//	Load assets
+	//load_ref();		//	Load 3D Object
+	load_rooms();	//	Load in rooms
+	
+	//	Prepare NBGH layers
+	slScrAutoDisp(NBG0ON | NBG1ON | NBG3ON | SPRON);
 
-	fadeIn();	//	Smooth background fade in
+	//	Prepare rooms
+	initialize_rooms();
+	generate_rooms();
+	map_rooms();	
+	//load_rooms_object();
 
 	//	Initialize player colission
 	player_bbox_init();
-
-	main_loop();	//	Main loop of game
+	
+	//	Smooth background fade in
+	fadeIn();
+	
+	//	Main loop of game
+	main_loop();	
 }

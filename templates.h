@@ -1,9 +1,9 @@
 #include <jo/jo.h>
 #include <string.h>
 
-jo_vertice    metal_crate_1_v[] = JO_3D_CUBE_VERTICES(32);
-jo_3d_quad    metal_crate_1_q[6];
-int		      metal_crate_1_nq;
+extern jo_vertice    metal_crate_1_v[] = JO_3D_CUBE_VERTICES(32);
+extern jo_3d_quad    metal_crate_1_q[6];
+extern int		      metal_crate_1_nq;
 
 //  Initialize geometry for selected object for copying
 void initilize_geo(char *name)

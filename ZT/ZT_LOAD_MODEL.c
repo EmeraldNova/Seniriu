@@ -6,6 +6,8 @@ entity_t entities[MAX_MODELS];
 Uint32 pDataSizes[MAX_MODELS];
 unsigned int gouraudCounter;
 
+
+
 /**
 Modified to use Jo Engine
 **/
@@ -72,7 +74,8 @@ Uint16 loadTextures(void * startAddress, modelData_t * modelData)
         /**Here we just fix the issue caused by using the add 8 bits image for 4 bits images**/
         texture=&__jo_sprite_def[id];
         texture->width=pimg[i]->width<<2;  //Ghetto technique for compatibility with Jo Engine, but trying to replace the sprite will throw an error
-        __jo_sprite_pic[id].color_mode=COL_16;
+		//	Jo Engine update broke this lin, had to replace with new reference
+        //__jo_sprite_pic[id].color_mode=COL_16;
         texture->size = JO_MULT_BY_32(texture->width & 0x1f8) | texture->height;
     }
     slDMACopy(workAddress, (void*)(returnLUTaddr((Uint16)(first_sprite+1))), sizeof(Uint16)*16 * modelData->TOT_TEXT);
