@@ -12,12 +12,13 @@
 //	Includes
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
+#include "display.h"
 #include "input.h"
 
 //	Definitions
-#define ROOM_NUM_X (2)
-#define ROOM_NUM_Y (3)
-#define ROOM_NUM_Z (2)
+#define ROOM_NUM_X (10)
+#define ROOM_NUM_Y (1)
+#define ROOM_NUM_Z (10)
 
 //	Struct
 //  Game Object containing necessary items for rendering
@@ -46,12 +47,35 @@ typedef struct {
 	
 	//	Adjacet doors
 	/*
+		Index
 		0 - North
 		1 - East
 		2 - South
 		3 - West
+		4 - Up
+		5 - Down
+		
+		Value
+		0 - No Door
+		1 - Door
+		2 - Window
 	*/
-	int doors[4];
+	int doors[6];
+	
+	//	Opacity
+	/*
+		Direction same indices as doors
+	
+		0	-	Full view
+		1	-	Restricted view (I.E. Window/door, reduced FOV)
+		2	-	Wall (no draws beyond that)
+	*/
+	int opacity[6];
+	
+	//	Visible (for drawing, rewritten every frame)
+	bool vis;
+	//	Distance from current room (Manhatten)
+	int dist[XYZ];
 }room;
 
 //	Variables
@@ -62,7 +86,7 @@ extern room roomMaster[ROOM_NUM_X][ROOM_NUM_Y][ROOM_NUM_Z];
 //	Current room contianing camera
 extern int current_room[XYZ];
 //	Grid spacing
-extern FIXED room_grid;
+extern FIXED room_grid[XYZ];
 //	Room Count
 extern int room_num;
 //	Scaling factor

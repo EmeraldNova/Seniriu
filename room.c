@@ -16,8 +16,8 @@ room roomMaster[ROOM_NUM_X][ROOM_NUM_Y][ROOM_NUM_Z];
 //	Current room contianing camera
 int current_room[XYZ];
 //	Grid spacing
-FIXED room_grid;
-//	Room Count
+FIXED room_grid[XYZ];
+//	Total Room Count
 int room_num = 0;
 //	Scaling factor
 FIXED scale_factor = toFIXED(1.0);
@@ -32,7 +32,9 @@ void initialize_rooms(void)
 	*/
 	
 	//	Initialize settings
-	room_grid = slMulFX(10<<16,scale_factor);
+	room_grid[X] = slMulFX(10<<16,scale_factor);
+	room_grid[Y] = slMulFX(toFIXED(3.5),scale_factor);
+	room_grid[Z] = slMulFX(10<<16,scale_factor);
 	cam_default_height = slMulFX(toFIXED(1.8),scale_factor);
 	move_inc = slMulFX(8000,scale_factor);
 	
@@ -42,8 +44,9 @@ void initialize_rooms(void)
 		{
 			for(int k = 0; k < ROOM_NUM_Z; k++)
 			{
-				//	Room exists
+				//	Room doesn't exist yet
 				roomMaster[i][j][k].alive = false;
+				roomMaster[i][j][k].vis = false;
 				
 				//	Write coords
 				roomMaster[i][j][k].coord[X] = i;
@@ -56,6 +59,16 @@ void initialize_rooms(void)
 				roomMaster[i][j][k].doors[1] = 0;
 				roomMaster[i][j][k].doors[2] = 0;
 				roomMaster[i][j][k].doors[3] = 0;
+				roomMaster[i][j][k].doors[4] = 0;
+				roomMaster[i][j][k].doors[5] = 0;
+				
+				//  Set opacity
+				roomMaster[i][j][k].opacity[0] = 0;
+				roomMaster[i][j][k].opacity[1] = 0;
+				roomMaster[i][j][k].opacity[2] = 0;
+				roomMaster[i][j][k].opacity[3] = 0;
+				roomMaster[i][j][k].opacity[4] = 0;
+				roomMaster[i][j][k].opacity[5] = 0;
 			}
 		}
 	}
@@ -85,13 +98,39 @@ void create_room(int position[XYZ])
 	
 	//	Adjust neighboring doors, existing or not
 	if(i > 0)
+	{
+		//	Adjust room to west
 		roomMaster[i-1][j][k].doors[1] = 1;
+		roomMaster[i-1][j][k].opacity[1] = 1;
+	}
 	if(i < ROOM_NUM_X-1)
+	{
 		roomMaster[i+1][j][k].doors[3] = 1;
+		roomMaster[i+1][j][k].opacity[3] = 1;
+	}
 	if(k > 0)
+	{
 		roomMaster[i][j][k-1].doors[0] = 1;
+		roomMaster[i][j][k-1].opacity[0] = 1;
+	}
 	if(k < ROOM_NUM_Z-1)
+	{
 		roomMaster[i][j][k+1].doors[2] = 1;
+		roomMaster[i][j][k+1].opacity[2] = 1;
+	}
+	
+	//	Initialize window if not already set
+	for(int l = 0; l < 4; l++)
+	{
+		if(roomMaster[i][j][k].doors[l] == 0)
+		{
+			//	Write door/window at location
+			roomMaster[i][j][k].opacity[l] = 1;
+		}
+		//	Opaque ceiling/floor
+		roomMaster[i][j][k].doors[4] = 2;
+		roomMaster[i][j][k].doors[5] = 2;
+	}
 	
 	//	Increment room number
 	room_num++;
@@ -157,13 +196,18 @@ void map_rooms(void)
 				}
 				
 				//	Copy pData
+				/*
 				pdataRoomMaster[i][j][k] = jo_malloc((int)pDataSizes[roomMaster[i][j][k].entity_ID]);
+				
 				slDMACopy((XPDATA*)entities[roomMaster[i][j][k].entity_ID].pol[0],
 							pdataRoomMaster[i][j][k],
 							pDataSizes[roomMaster[i][j][k].entity_ID]);
+				*/
+				pdataRoomMaster[i][j][k] = (XPDATA*)entities[roomMaster[i][j][k].entity_ID].pol[0];
+							
 				roomMaster[i][j][k].pDataStart = pdataRoomMaster[i][j][k];
 				
-				//	Find angle
+				//	Find angle, define opacity
 				roomMaster[i][j][k].theta = 0;
 				switch(roomMaster[i][j][k].entity_ID)
 				{
@@ -255,8 +299,8 @@ void map_rooms(void)
 						}
 						else if(roomMaster[i][j][k].doors[3] == 0)
 						{
-							//	West empty, -90 deg
-							roomMaster[i][j][k].theta = -DEGtoANG(90.0);
+							//	West empty, 90 deg
+							roomMaster[i][j][k].theta = DEGtoANG(90.0);
 						}
 						break;
 						
@@ -280,40 +324,288 @@ void draw_rooms(void)
 		Draws all existing rooms
 	*/
 	
+	//	Print counter
+	int print_line = 7;
+	
 	//	Update current room
-	if(pl_position[X] < -(room_grid>>1) && current_room[X] > 0)
+	if(pl_position[X] < -(room_grid[X]>>1) && current_room[X] > 0)
 	{
-		pl_position[X] += room_grid;
+		pl_position[X] += room_grid[X];
 		current_room[X]--;
 	}
-	else if(pl_position[X] >= (room_grid>>1) && current_room[X] < ROOM_NUM_X-1)
+	else if(pl_position[X] >= (room_grid[X]>>1) && current_room[X] < ROOM_NUM_X-1)
 	{
-		pl_position[X] -= room_grid;
+		pl_position[X] -= room_grid[X];
 		current_room[X]++;
 	}
-	if(pl_position[Y] < -(room_grid>>1) && current_room[Y] < ROOM_NUM_Y-1)
+	if(pl_position[Y] < -(room_grid[Y]>>1) && current_room[Y] < ROOM_NUM_Y-1)
 	{
 		//	Going up 1 floor
-		pl_position[Y] += room_grid;
+		pl_position[Y] += room_grid[Y];
 		current_room[Y]++;
 	}
-	else if(pl_position[Y] >= (room_grid>>1) && current_room[Y] > 0)
+	else if(pl_position[Y] >= (room_grid[Y]>>1) && current_room[Y] > 0)
 	{
 		//	Going down 1 floor
-		pl_position[Y] -= room_grid;
+		pl_position[Y] -= room_grid[Y];
 		current_room[Y]--;
 	}
-	if(pl_position[Z] < -(room_grid>>1) && current_room[Z] > 0)
+	if(pl_position[Z] < -(room_grid[Z]>>1) && current_room[Z] > 0)
 	{
-		pl_position[Z] += room_grid;
+		pl_position[Z] += room_grid[Z];
 		current_room[Z]--;
 	}
-	else if(pl_position[Z] >= (room_grid>>1) && current_room[Z] < ROOM_NUM_Z-1)
+	else if(pl_position[Z] >= (room_grid[Z]>>1) && current_room[Z] < ROOM_NUM_Z-1)
 	{
-		pl_position[Z] -= room_grid;
+		pl_position[Z] -= room_grid[Z];
 		current_room[Z]++;
 	}
+	//	Print Current Room
+	jo_set_printf_color_index(JO_COLOR_INDEX_Red);
+	jo_printf(0,print_line++,"Current Room %d,%d,%d",
+		current_room[X], current_room[Y], current_room[Z]);
 	
+	//	Find visible rooms using integer angles
+	//	ANGLE / 182.04 (4 repeating) = degrees as ints
+	int room_hor;	//	Horizontal angle of room from current room
+	int room_ver;	//	Vertical angle of room from current room
+	int lower_lim;	//	Lower angle limit check
+	int upper_lim;	//	Upper angle limit check
+	int num_vis = 0;	//	Number of visible rooms
+	for(int j = 0; j < ROOM_NUM_Y; j++)
+	{
+		for(int i = 0; i < ROOM_NUM_X; i++)
+		{
+			for(int k = 0; k < ROOM_NUM_Z; k++)
+			{
+				//	Set to not visible
+				roomMaster[i][j][k].vis = false;
+				
+				//	Only calculate real rooms
+				if(roomMaster[i][j][k].alive)
+				{
+					//	Build deltas
+					roomMaster[i][j][k].dist[X] = i - current_room[X];
+					roomMaster[i][j][k].dist[Y] = j - current_room[Y];
+					roomMaster[i][j][k].dist[Z] = k -current_room[Z];
+					
+					//	Always draw current room
+					if(JO_ABS(roomMaster[i][j][k].dist[X]) +
+					   JO_ABS(roomMaster[i][j][k].dist[Y]) +
+					   JO_ABS(roomMaster[i][j][k].dist[Z]) == 0)
+					{
+						roomMaster[i][j][k].vis = true;
+					}
+					else if(
+						JO_ABS(roomMaster[i][j][k].dist[Y]) == 0
+						)
+					{
+						if(
+						slAng2FX(theta[Y]) <= 90<<16 ||
+						slAng2FX(theta[Y]) >= 270<<16
+						)
+						{
+							//	Draw +Z direction
+							if(roomMaster[i][j][k].dist[Z] > 0)
+							{
+								roomMaster[i][j][k].vis = true;
+							}
+						}
+						
+						if(
+						slAng2FX(theta[Y]) <= 180<<16 && 
+						slAng2FX(theta[Y]) >= 0<<16
+						)
+						{
+							//	Draw +X direction
+							if(roomMaster[i][j][k].dist[X] > 0)
+							{
+								roomMaster[i][j][k].vis = true;
+							}
+						}
+						
+						if(
+						slAng2FX(theta[Y]) <= 270<<16 && 
+						slAng2FX(theta[Y]) >= 90<<16
+						)
+						{
+							//	Draw -Z direction
+							if(roomMaster[i][j][k].dist[Z] < 0)
+							{
+								roomMaster[i][j][k].vis = true;
+							}
+						}
+						
+						if(
+						slAng2FX(theta[Y]) >= 180<<16
+						)
+						{
+							//	Draw -X direction
+							if(roomMaster[i][j][k].dist[X] < 0)
+							{
+								roomMaster[i][j][k].vis = true;
+							}
+						}
+					}
+					
+					//	Iterate number visible
+					if(roomMaster[i][j][k].vis)
+					{
+						num_vis++;
+						
+						//	Print current room info
+						jo_printf(0,print_line++,"Room %d,%d,%d; delta: %d,%d,%d; vis: %d          ",
+						i, j, k,
+						roomMaster[i][j][k].dist[X],
+						roomMaster[i][j][k].dist[Y],
+						roomMaster[i][j][k].dist[Z],
+						roomMaster[i][j][k].vis);
+					}
+				}
+			}
+		}
+	}
+	//	Print visible room info
+	jo_printf(0,print_line++,"Visible rooms: %d, Max Rooms: %d       ", num_vis, MAX_ROOM_DISPLAY);
+	num_vis = JO_MIN(num_vis, MAX_ROOM_DISPLAY);
+	jo_printf(0,print_line++,"                                    ");
+	jo_printf(0,print_line++,"                                    ");
+	jo_printf(0,print_line++,"                                    ");
+	jo_printf(0,print_line++,"                                    ");
+	jo_printf(0,print_line++,"                                    ");
+	jo_printf(0,print_line++,"                                    ");
+	jo_printf(0,print_line++,"                                    ");
+	
+	//	Generate list of rooms to draw
+	int room_draw_coords[MAX_ROOM_DISPLAY][3];
+	//	Current room
+	int room_draw_count = 0;
+	if(roomMaster[current_room[X]][current_room[Y]][current_room[Z]].vis)
+	{
+		room_draw_coords[0][0] = current_room[X];
+		room_draw_coords[0][1] = current_room[Y];
+		room_draw_coords[0][2] = current_room[Z];
+		room_draw_count++;
+	}
+	//	Loop through rooms
+	int dist_compare = 1;
+	int min_room[XYZ];
+	int max_room[XYZ];
+	while(room_draw_count < num_vis)
+	{
+		//	Find room limits
+		min_room[X] = JO_MAX(current_room[X]-dist_compare, 0);
+		max_room[X] = JO_MIN(current_room[X]+dist_compare, ROOM_NUM_X-1);
+		min_room[Y] = JO_MAX(current_room[Y]-dist_compare, 0);
+		max_room[Y] = JO_MIN(current_room[Y]+dist_compare, ROOM_NUM_Y-1);
+		min_room[Z] = JO_MAX(current_room[Z]-dist_compare, 0);
+		max_room[Z] = JO_MIN(current_room[Z]+dist_compare, ROOM_NUM_Z-1);
+		
+		//	Full search
+		min_room[X] = 0;
+		min_room[Y] = 0;
+		min_room[Z] = 0;
+		max_room[X] = ROOM_NUM_X-1;
+		max_room[Y] = ROOM_NUM_Y-1;
+		max_room[Z] = ROOM_NUM_Z-1;
+		
+		for(int j = min_room[Y]; j <= max_room[Y]; j++)
+		{
+			for(int i = min_room[X]; i <= max_room[X]; i++)
+			{
+				for(int k = min_room[Z]; k <= max_room[Z]; k++)
+				{
+					//	Only add visible rooms to draw list and only if number of drawns rooms is within limit
+					if(roomMaster[i][j][k].vis && (room_draw_count < num_vis))
+					{
+						//	Check distance
+						if(
+							dist_compare == 
+							JO_ABS(roomMaster[i][j][k].dist[X]) +
+							JO_ABS(roomMaster[i][j][k].dist[Y]) +
+							JO_ABS(roomMaster[i][j][k].dist[Z])
+						)
+						{
+							//	Distance matches, add room to render list, then iterate draw count
+							room_draw_coords[room_draw_count][0] = i;
+							room_draw_coords[room_draw_count][1] = j;
+							room_draw_coords[room_draw_count][2] = k;
+							room_draw_count++;
+						}
+					}
+				}
+			}
+		}
+		
+		//	Iterate comapred distance
+		dist_compare++;
+	}
+	
+	//	Loop through rooms to draw
+	int i,j,k;
+	for(room_draw_count = 0; room_draw_count < num_vis; room_draw_count++)
+	{
+		//	Purge cache
+		slCashPurge();
+		
+		//	Set coords
+		i = room_draw_coords[room_draw_count][0];
+		j = room_draw_coords[room_draw_count][1];
+		k = room_draw_coords[room_draw_count][2];
+		
+		/*
+		//	Print current room info
+		jo_printf(0,print_line++,"Room %d,%d,%d; delta: %d,%d,%d; vis: %d          ",
+		i, j, k,
+		roomMaster[i][j][k].dist[X],
+		roomMaster[i][j][k].dist[Y],
+		roomMaster[i][j][k].dist[Z],
+		roomMaster[i][j][k].vis);
+		jo_printf(0,print_line++,"doors: %d,%d,%d,%d                        ",
+		roomMaster[i][j][k].doors[0],
+		roomMaster[i][j][k].doors[1],
+		roomMaster[i][j][k].doors[2],
+		roomMaster[i][j][k].doors[3]);
+		*/
+		
+		//	Determine map coord difference
+		/*
+		roomMaster[i][j][k].dist[X] = roomMaster[i][j][k].coord[X] - current_room[X];
+		roomMaster[i][j][k].dist[Y] = roomMaster[i][j][k].coord[Y] - current_room[Y];
+		roomMaster[i][j][k].dist[Z] = roomMaster[i][j][k].coord[Z] - current_room[Z];
+		*/
+		
+		slPushMatrix();		//	Advance matrix buffer pointer 1 step
+
+		//	Rotate perspective for player angle 
+		slRotY(-theta[Y]);	
+		//	Translate draw location
+		slTranslate(room_grid[X] * roomMaster[i][j][k].dist[X] - pl_position[X],
+			-room_grid[Y] * roomMaster[i][j][k].dist[Y] - pl_position[Y] + cam_height,
+			room_grid[Z] * roomMaster[i][j][k].dist[Z] - pl_position[Z]);		
+		
+		//	Rotate object
+		slRotY(-roomMaster[i][j][k].theta);	
+		//	Sets scale of 3D draw, larger numbers draw bigger		
+		slScale(scale_factor, scale_factor, scale_factor);	
+	
+		//	Draw
+		//slPutPolygon((XPDATA*)roomMaster[i][j][k].pDataStart);
+		slPutPolygon((XPDATA*)entities[roomMaster[i][j][k].entity_ID].pol[0]);
+		
+		slPopMatrix();		//	Return matrix buffer pointer back 1 step
+		
+		/*
+		//	Print Rooms Status
+		jo_printf(0,print_line++,"Room %d,%d,%d delta: %d,%d,%d",
+			i, j, k,
+			roomMaster[i][j][k].dist[X],
+			roomMaster[i][j][k].dist[Y],
+			roomMaster[i][j][k].dist[Z]);
+		*/
+	}
+	
+	/*
 	//	Find room limits
 	int room_range = 1;
 	int min_room[XYZ];
@@ -358,9 +650,9 @@ void draw_rooms(void)
 					//	Rotate perspective for player angle 
 					slRotY(-theta[Y]);	
 					//	Translate draw location
-					slTranslate(room_grid * map_delta[X] - pl_position[X],
-						-room_grid * map_delta[Y] - pl_position[Y] + cam_height,
-						room_grid * map_delta[Z] - pl_position[Z]);		
+					slTranslate(room_grid[X] * map_delta[X] - pl_position[X],
+						-room_grid[Y] * map_delta[Y] - pl_position[Y] + cam_height,
+						room_grid[Z] * map_delta[Z] - pl_position[Z]);		
 					//	Rotate object
 					slRotY(-roomMaster[i][j][k].theta);	
 					//	Sets scale of 3D draw, larger numbers draw bigger		
@@ -378,11 +670,12 @@ void draw_rooms(void)
 			}
 		}
 	}
+	*/
 	
 	return;
 }
 
-void load_rooms()
+void load_rooms(void)
 {
 	/*
 		Load Rooms
@@ -416,16 +709,11 @@ void generate_rooms(void)
 	int position[XYZ];
 	
 	// Room
-	position[X] = 0;
-	position[Y] = 0;
-	position[Z] = 0;
-	create_room(position);
-	
-	// Room
 	position[X] = 1;
 	position[Y] = 0;
-	position[Z] = 0;
+	position[Z] = 1;
 	create_room(position);
+	
 	
 	// Room
 	position[X] = 0;
@@ -434,45 +722,112 @@ void generate_rooms(void)
 	create_room(position);
 	
 	// Room
-	position[X] = 0;
-	position[Y] = 1;
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 1;
+	create_room(position);
+	
+	// Room
+	position[X] = 3;
+	position[Y] = 0;
+	position[Z] = 1;
+	create_room(position);
+	
+	// Room
+	position[X] = 4;
+	position[Y] = 0;
+	position[Z] = 1;
+	create_room(position);
+	
+	// Room
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 1;
+	create_room(position);
+	
+	// Room
+	position[X] = 6;
+	position[Y] = 0;
+	position[Z] = 1;
+	create_room(position);
+	
+	// Room
+	position[X] = 7;
+	position[Y] = 0;
+	position[Z] = 1;
+	create_room(position);
+	
+	
+	// Room
+	position[X] = 1;
+	position[Y] = 0;
 	position[Z] = 0;
 	create_room(position);
 	
 	// Room
 	position[X] = 1;
-	position[Y] = 1;
-	position[Z] = 0;
-	create_room(position);
-	
-	// Room
-	position[X] = 0;
-	position[Y] = 1;
-	position[Z] = 1;
-	create_room(position);
-	
-	// Room
-	position[X] = 0;
-	position[Y] = 2;
-	position[Z] = 0;
+	position[Y] = 0;
+	position[Z] = 2;
 	create_room(position);
 	
 	// Room
 	position[X] = 1;
-	position[Y] = 2;
-	position[Z] = 0;
+	position[Y] = 0;
+	position[Z] = 3;
 	create_room(position);
 	
 	// Room
-	position[X] = 0;
-	position[Y] = 2;
-	position[Z] = 1;
+	position[X] = 1;
+	position[Y] = 0;
+	position[Z] = 4;
+	create_room(position);
+	
+	// Room
+	position[X] = 1;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 1;
+	position[Y] = 0;
+	position[Z] = 6;
+	create_room(position);
+	
+	// Room
+	position[X] = 1;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 1;
+	position[Y] = 0;
+	position[Z] = 8;
+	create_room(position);
+	
+	// Room
+	position[X] = 3;
+	position[Y] = 0;
+	position[Z] = 2;
+	create_room(position);
+	
+	// Room
+	position[X] = 3;
+	position[Y] = 0;
+	position[Z] = 3;
+	create_room(position);
+	
+	// Room
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 3;
 	create_room(position);
 	
 	//	Set current room
 	current_room[X] = 1;
 	current_room[Y] = 0;
-	current_room[Z] = 0;
+	current_room[Z] = 1;
 	
 	return;
 }

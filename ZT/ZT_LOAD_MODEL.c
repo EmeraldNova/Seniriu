@@ -175,7 +175,7 @@ void * ztLoad3Dmodel(Sint8 * filename, void * startAddress, int entity_ID, Bool 
     /**Turns on the graphics (mainly for debugging, remove it if everything works)**/
 	//   slScrAutoDisp(NBG3ON);
    //slPrint("NOW LOADING...", slLocate(5, 5));    slPrint((char*)filename, slLocate(5, 6));
-   fadeIn();
+   //fadeIn();
 
 
     /**Load the texture list (using an offset to allow DMA transfer)**/

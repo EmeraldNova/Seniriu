@@ -33,33 +33,10 @@
 ** SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <jo/jo.h>
-#include "ZT/ZT_COMMON.h"
-#include "separate_3D.h"
-#include "animate.h"
-#include "input.h"
-#include "game_object.h"
-#include "collision.h"
-#include "room.h"
+#include "main.h"
 
+//VECTOR lighting_direction = {0, 32767, 0};
 
-//static int framenum = 0;
-//static Uint8 old_tick = 0;
-//static Uint8 tick = 0;
-
-
-/**Functions/variables added by XL2 **/
-/**Added by XL2 to use my own CD loading functions**/
-
-#define     OPEN_MAX    (Sint32)5
-#define     DIR_MAX     (Sint32)25
-GfsDirTbl gfsDirTbl;
-GfsDirName gfsDirName[DIR_MAX];
-Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
-Sint32 gfsDirN;
-
-//	Track loading addresses in LWRAM
-void * currentAddress;
 
 //	Added by XL2 - Very basic function to display a 3D model
 void display_model(entity_t * model)
@@ -76,9 +53,9 @@ void display_model(entity_t * model)
 //	Number of models to load
 Uint32 nbModels = 1;
 
-
 //	Load 3D object
-void load_ref(void){
+void load_ref(void)
+{
 	/*
 		Load References
 		
@@ -196,6 +173,9 @@ void main_loop(void)
 		//stop_collided();
 		//update_obj_position();
 
+		//	Lighting direction
+		//slLight(lighting_direction);
+		
 		//  Draw Objects
 		my_draw();
 		
@@ -263,7 +243,11 @@ void load_rooms_object()
 
 void jo_main(void)
 {
-	
+	/*
+		Jo Main
+		
+		Main initialization and program starting function
+	*/
 	
 	//  Initialize engine with black background
 	jo_core_init(JO_COLOR_Black);	
@@ -284,7 +268,7 @@ void jo_main(void)
 	slDynamicFrame(ON);		//	Dynamic framerate
 	slZdspLevel(7);			//	Define frustrum culling near plane
     //	FOV
-	slPerspective(DEGtoANG(90.0));
+	slPerspective(FOV);
 	
 	//	Background Layer
 	jo_img bg;
