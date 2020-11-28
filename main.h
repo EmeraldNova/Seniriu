@@ -39,6 +39,7 @@
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 #include "display.h"
+#include "bg.h"
 #include "separate_3D.h"
 #include "animate.h"
 #include "input.h"

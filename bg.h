@@ -6,17 +6,22 @@
 ** More info at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
 */
 
-#ifndef __DISPLAY_H__
-#define __DISPLAY_H__
+#ifndef __BG_H__
+#define __BG_H__
 
 //	Includes
 #include <jo/jo.h>
-
-//	Definitions
-#define MAX_ROOM_DISPLAY (5)
+#include "input.h"
 
 //	Variables
-//	(full) Field of View
-extern ANGLE FOV;
+extern jo_img_8bits bg_img;
+extern jo_palette bg_pal;
+
+//	Functions
+jo_palette *bg_tga_palette_handling(void);
+void bg_init(int index);
+void load_bg(int index);
+void draw_bg(void);
+
 
 #endif

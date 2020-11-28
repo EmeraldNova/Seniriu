@@ -33,7 +33,7 @@ void initialize_rooms(void)
 	
 	//	Initialize settings
 	room_grid[X] = slMulFX(10<<16,scale_factor);
-	room_grid[Y] = slMulFX(toFIXED(3.5),scale_factor);
+	room_grid[Y] = slMulFX( 6<<16,scale_factor);
 	room_grid[Z] = slMulFX(10<<16,scale_factor);
 	cam_default_height = slMulFX(toFIXED(1.8),scale_factor);
 	move_inc = slMulFX(8000,scale_factor);
@@ -454,12 +454,14 @@ void draw_rooms(void)
 						num_vis++;
 						
 						//	Print current room info
+						/*
 						jo_printf(0,print_line++,"Room %d,%d,%d; delta: %d,%d,%d; vis: %d          ",
 						i, j, k,
 						roomMaster[i][j][k].dist[X],
 						roomMaster[i][j][k].dist[Y],
 						roomMaster[i][j][k].dist[Z],
 						roomMaster[i][j][k].vis);
+						*/
 					}
 				}
 			}
@@ -553,28 +555,6 @@ void draw_rooms(void)
 		j = room_draw_coords[room_draw_count][1];
 		k = room_draw_coords[room_draw_count][2];
 		
-		/*
-		//	Print current room info
-		jo_printf(0,print_line++,"Room %d,%d,%d; delta: %d,%d,%d; vis: %d          ",
-		i, j, k,
-		roomMaster[i][j][k].dist[X],
-		roomMaster[i][j][k].dist[Y],
-		roomMaster[i][j][k].dist[Z],
-		roomMaster[i][j][k].vis);
-		jo_printf(0,print_line++,"doors: %d,%d,%d,%d                        ",
-		roomMaster[i][j][k].doors[0],
-		roomMaster[i][j][k].doors[1],
-		roomMaster[i][j][k].doors[2],
-		roomMaster[i][j][k].doors[3]);
-		*/
-		
-		//	Determine map coord difference
-		/*
-		roomMaster[i][j][k].dist[X] = roomMaster[i][j][k].coord[X] - current_room[X];
-		roomMaster[i][j][k].dist[Y] = roomMaster[i][j][k].coord[Y] - current_room[Y];
-		roomMaster[i][j][k].dist[Z] = roomMaster[i][j][k].coord[Z] - current_room[Z];
-		*/
-		
 		slPushMatrix();		//	Advance matrix buffer pointer 1 step
 
 		//	Rotate perspective for player angle 
@@ -589,88 +569,14 @@ void draw_rooms(void)
 		//	Sets scale of 3D draw, larger numbers draw bigger		
 		slScale(scale_factor, scale_factor, scale_factor);	
 	
-		//	Draw
-		//slPutPolygon((XPDATA*)roomMaster[i][j][k].pDataStart);
+		//	Draw Interior
 		slPutPolygon((XPDATA*)entities[roomMaster[i][j][k].entity_ID].pol[0]);
+		//	Draw Hull
+		slPutPolygon((XPDATA*)entities[roomMaster[i][j][k].entity_ID + 5].pol[0]);
+		
 		
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
-		
-		/*
-		//	Print Rooms Status
-		jo_printf(0,print_line++,"Room %d,%d,%d delta: %d,%d,%d",
-			i, j, k,
-			roomMaster[i][j][k].dist[X],
-			roomMaster[i][j][k].dist[Y],
-			roomMaster[i][j][k].dist[Z]);
-		*/
 	}
-	
-	/*
-	//	Find room limits
-	int room_range = 1;
-	int min_room[XYZ];
-	int max_room[XYZ];
-	min_room[X] = JO_MAX(current_room[X]-room_range, 0);
-	max_room[X] = JO_MIN(current_room[X]+room_range, ROOM_NUM_X-1);
-	min_room[Y] = JO_MAX(current_room[Y]-room_range, 0);
-	max_room[Y] = JO_MIN(current_room[Y]+room_range, ROOM_NUM_Y-1);
-	min_room[Z] = JO_MAX(current_room[Z]-room_range, 0);
-	max_room[Z] = JO_MIN(current_room[Z]+room_range, ROOM_NUM_Z-1);
-	
-	//	Draw
-	int print_line = 7;
-	int map_delta[XYZ];
-	//	Print Current Room
-	jo_printf(0,print_line,"Current Room %d,%d,%d",
-		current_room[X], current_room[Y], current_room[Z]);
-	jo_printf(20,print_line++,"Min-Max %d-%d,%d-%d,%d-%d",
-		min_room[X], max_room[X],
-		min_room[Y], max_room[Y],
-		min_room[Z], max_room[Z]);
-	
-	//	Loop through adjacent rooms
-	for(int j = min_room[Y]; j <= max_room[Y]; j++)
-	{
-		for(int i = min_room[X]; i <= max_room[X]; i++)
-		{
-			for(int k = min_room[Z]; k <= max_room[Z]; k++)
-			{
-				if(roomMaster[i][j][k].alive)
-				{
-					//	Purge cache
-					slCashPurge();
-					
-					//	Determine map coord difference
-					map_delta[X] = roomMaster[i][j][k].coord[X] - current_room[X];
-					map_delta[Y] = roomMaster[i][j][k].coord[Y] - current_room[Y];
-					map_delta[Z] = roomMaster[i][j][k].coord[Z] - current_room[Z];
-					
-					slPushMatrix();		//	Advance matrix buffer pointer 1 step
-			
-					//	Rotate perspective for player angle 
-					slRotY(-theta[Y]);	
-					//	Translate draw location
-					slTranslate(room_grid[X] * map_delta[X] - pl_position[X],
-						-room_grid[Y] * map_delta[Y] - pl_position[Y] + cam_height,
-						room_grid[Z] * map_delta[Z] - pl_position[Z]);		
-					//	Rotate object
-					slRotY(-roomMaster[i][j][k].theta);	
-					//	Sets scale of 3D draw, larger numbers draw bigger		
-					slScale(scale_factor, scale_factor, scale_factor);	
-				
-					//	Draw
-					slPutPolygon((XPDATA*)roomMaster[i][j][k].pDataStart);
-					
-					slPopMatrix();		//	Return matrix buffer pointer back 1 step
-					
-					//	Print Rooms Status
-					jo_printf(0,print_line++,"Room %d,%d,%d: %d",
-						i, j, k, roomMaster[i][j][k].entity_ID);
-				}
-			}
-		}
-	}
-	*/
 	
 	return;
 }
@@ -686,13 +592,24 @@ void load_rooms(void)
 	//	Start loading in LWRAM beginning
     void * currentAddress = (void*)LWRAM;
 	
+	//	Load images
+	
 	//	Load rooms
 	int ID = 0;
+	
+	//	Interiors
 	currentAddress = ztLoad3Dmodel((Sint8*)"COR1W.ZTP", currentAddress, ID++, false);
 	currentAddress = ztLoad3Dmodel((Sint8*)"COR2SW.ZTP", currentAddress, ID++, false);
 	currentAddress = ztLoad3Dmodel((Sint8*)"COR2AW.ZTP", currentAddress, ID++, false);
 	currentAddress = ztLoad3Dmodel((Sint8*)"COR3.ZTP", currentAddress, ID++, false);
 	currentAddress = ztLoad3Dmodel((Sint8*)"COR4.ZTP", currentAddress, ID++, false);
+	
+	//	Exteriors
+	currentAddress = ztLoad3Dmodel((Sint8*)"COR1W_W.ZTP", currentAddress, ID++, false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"COR2SW_W.ZTP", currentAddress, ID++, false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"COR2AW_W.ZTP", currentAddress, ID++, false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"COR3_W.ZTP", currentAddress, ID++, false);
+	currentAddress = ztLoad3Dmodel((Sint8*)"COR4_W.ZTP", currentAddress, ID++, false);
 	
 	return;
 }
@@ -714,7 +631,6 @@ void generate_rooms(void)
 	position[Z] = 1;
 	create_room(position);
 	
-	
 	// Room
 	position[X] = 0;
 	position[Y] = 0;
@@ -722,9 +638,21 @@ void generate_rooms(void)
 	create_room(position);
 	
 	// Room
+	position[X] = 0;
+	position[Y] = 0;
+	position[Z] = 0;
+	create_room(position);
+	
+	// Room
 	position[X] = 2;
 	position[Y] = 0;
 	position[Z] = 1;
+	create_room(position);
+	
+	// Room
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 0;
 	create_room(position);
 	
 	// Room

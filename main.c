@@ -100,6 +100,9 @@ void my_draw(void)
 		Draws all objects
 	*/
 	
+	//	Draw background
+	//draw_bg();
+	
 	//	Draw Rooms
 	draw_rooms();
 	
@@ -271,11 +274,15 @@ void jo_main(void)
 	slPerspective(FOV);
 	
 	//	Background Layer
+	
 	jo_img bg;
     bg.data = NULL;
-    jo_tga_loader(&bg, "BG", "BG2.TGA", JO_COLOR_Transparent);
+    jo_tga_loader(&bg, "BG", "BG3.TGA", JO_COLOR_Transparent);
     jo_set_background_sprite(&bg, 0, 0);
     jo_free_img(&bg);
+	
+	//bg_init(0);
+	
 	
 
 	//	Load assets

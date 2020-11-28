@@ -6,7 +6,7 @@ JO_COMPILE_WITH_3D_MODULE = 1
 JO_COMPILE_WITH_PSEUDO_MODE7_MODULE = 0
 JO_COMPILE_WITH_EFFECTS_MODULE = 0
 JO_DEBUG = 1
-SRCS = main.c ZT/ZT_LOAD_MODEL.c ZT/ZT_TOOLS.c input.c game_object.c collision.c separate.c separate_3D.c animate.c room.c display.c
+SRCS = main.c ZT/ZT_LOAD_MODEL.c ZT/ZT_TOOLS.c input.c game_object.c collision.c separate.c separate_3D.c animate.c room.c display.c bg.c
 JO_ENGINE_SRC_DIR=../../jo_engine
 COMPILER_DIR=../../Compiler
 include $(COMPILER_DIR)/COMMON/jo_engine_makefile
