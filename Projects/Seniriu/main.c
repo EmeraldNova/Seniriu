@@ -66,14 +66,16 @@ void load_ref(void)
     void * currentAddress = (void*)LWRAM;
 	
 	//	File names
-	#define NUM_FILES  (5)
+	#define NUM_FILES  (7)
 	const Sint8 * filenames[NUM_FILES] = 
 	{
 		"FLOOR.ZTP",
 		"CEIL.ZTP",
 		"CORNER.ZTP",
 		"DOOR.ZTP",
-		"WINDOW.ZTP"
+		"WINDOW.ZTP",
+		"JELLY.ZTP",
+		"BLOBB.ZTP"
 	};
 	
 	
@@ -120,7 +122,23 @@ void load_ref(void)
 			int up_dir[XYZ] = {0, 0, 0};
 			
 			//	Disable lighting
-			entities[ent_ID].pol[0]->attbl[i].sort ^= UseLight;
+			entities[ent_ID].pol[0]->attbl[i].sort &= ~UseLight;
+			
+			//	Clear Sort
+			//entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
+			//	Max sort default
+			//entities[ent_ID].pol[0]->attbl[i].sort |= SORT_CEN;
+			
+			//	Special flags for select objects
+			if(ent_ID == 6)
+			{
+				//	Activate mesh on specific entity
+				entities[ent_ID].pol[0]->attbl[i].atrb |= MESHon;
+				
+				//	Change Z sort
+				//entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
+				//entities[ent_ID].pol[0]->attbl[i].sort |= SORT_MAX;
+			}
 			
 			//	Determine Chief Normal
 			int norm;
@@ -269,9 +287,6 @@ void my_draw(void)
 	//	Draw background
 	//draw_bg();
 	
-	//	Draw Rooms
-	draw_rooms();
-	
 	//	Loop through objects
 	for(int ind = 0; ind < num_object; ind++)
 	{
@@ -290,12 +305,14 @@ void my_draw(void)
 			object[ind].scale[Z]);	
 	
 		//	Animation
-		//display_animated_model(&object[ind], object[ind].ani);
-		slPutPolygon((XPDATA*)object[ind].pDataStart);
+		display_animated_model(ind);
+		//slPutPolygon((XPDATA*)object[ind].pDataStart);
 		
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
 	}
 	
+	//	Draw Rooms
+	draw_rooms();
 
 	//	Print polygon info
 	//slPrintFX(toFIXED(jo_3d_get_polygon_count()), slLocate(0,1));
@@ -313,6 +330,83 @@ void my_draw(void)
     return;
 }
 
+void load_game_objects(void)
+{
+	/*
+		Load Game Objects
+		
+		Initialize game objects for testing
+	*/
+	
+	//	Load model at position
+	FIXED position[XYZ] = {2<<16, -(1<<15), 2<<16};
+	ANGLE rot[XYZ] = {0, DEGtoANG(180.0), 0};
+	
+	
+	//	Object 0
+	create_object(position, rot, 5);
+	object[num_object-1].ani_con.currentAni = 1;
+	object[num_object-1].ani_con.currentFrm = 0;
+	object[num_object-1].ani_con.currentKeyFrm = 0;
+	object[num_object-1].ani_con.last_frame[0] = 1;
+	object[num_object-1].ani_con.frames[0][0] = 2;
+	object[num_object-1].ani_con.frames[0][1] = 3;
+	object[num_object-1].ani_con.last_frame[1] = 29;
+	object[num_object-1].ani_con.frames[1][0] = 0;
+	object[num_object-1].ani_con.frames[1][1] = 0;
+	object[num_object-1].ani_con.frames[1][2] = 0;
+	object[num_object-1].ani_con.frames[1][3] = 0;
+	object[num_object-1].ani_con.frames[1][4] = 0;
+	object[num_object-1].ani_con.frames[1][5] = 1;
+	object[num_object-1].ani_con.frames[1][6] = 1;
+	object[num_object-1].ani_con.frames[1][7] = 1;
+	object[num_object-1].ani_con.frames[1][8] = 1;
+	object[num_object-1].ani_con.frames[1][9] = 1;
+	object[num_object-1].ani_con.frames[1][10] = 2;
+	object[num_object-1].ani_con.frames[1][11] = 2;
+	object[num_object-1].ani_con.frames[1][12] = 2;
+	object[num_object-1].ani_con.frames[1][13] = 2;
+	object[num_object-1].ani_con.frames[1][14] = 2;
+	object[num_object-1].ani_con.frames[1][15] = 3;
+	object[num_object-1].ani_con.frames[1][16] = 3;
+	object[num_object-1].ani_con.frames[1][17] = 3;
+	object[num_object-1].ani_con.frames[1][18] = 3;
+	object[num_object-1].ani_con.frames[1][19] = 3;
+	object[num_object-1].ani_con.frames[1][20] = 2;
+	object[num_object-1].ani_con.frames[1][21] = 2;
+	object[num_object-1].ani_con.frames[1][22] = 2;
+	object[num_object-1].ani_con.frames[1][23] = 2;
+	object[num_object-1].ani_con.frames[1][24] = 2;
+	object[num_object-1].ani_con.frames[1][25] = 1;
+	object[num_object-1].ani_con.frames[1][26] = 1;
+	object[num_object-1].ani_con.frames[1][27] = 1;
+	object[num_object-1].ani_con.frames[1][28] = 1;
+	object[num_object-1].ani_con.frames[1][29] = 1;
+	
+	
+	//	Object 1
+	position[X] = 0<<16;
+	position[Y] = -(1<<6);
+	position[Z] = 2<<16;
+	rot[Y] = DEGtoANG(90.0);
+	create_object(position, rot, 6);
+	object[num_object-1].ani_con.currentAni = 2;
+	object[num_object-1].ani_con.currentFrm = 0;
+	object[num_object-1].ani_con.currentKeyFrm = 0;
+	object[num_object-1].ani_con.last_frame[1] = 79;
+	object[num_object-1].ani_con.last_frame[2] = 79;
+	for(int j = 0; j <= object[num_object-1].ani_con.last_frame[1]; j++)
+	{
+		object[num_object-1].ani_con.frames[1][j] = j;
+	}
+	for(int j = 0; j <= object[num_object-1].ani_con.last_frame[1]; j++)
+	{
+		object[num_object-1].ani_con.frames[2][j] = 3*(j/3);
+	}
+	
+	return;
+}
+
 //  Main Logic Loop
 void main_loop(void)
 {
@@ -320,7 +414,6 @@ void main_loop(void)
 	
 	while(1)
 	{
-		
 		//	Time
 		framerate = (int)SynchConst;
 		jo_fixed_point_time();
@@ -348,67 +441,10 @@ void main_loop(void)
 		//  Draw Objects
 		my_draw();
 		
-		
 		//	Force screen blanking to wait until events are done processing
 		slSynch();			
 	}
 }
-
-
-void load_rooms_object()
-{
-	/*
-		Load Rooms
-		
-		Manually Load room objects for display
-	*/
-	
-	//	Grid spacing
-	FIXED grid = 10<<16;
-	
-	//	Location to place room
-	FIXED room_loc[XYZ];
-	FIXED room_angle[XYZ];
-	
-	//	Room 1
-	room_loc[X] = 0;
-	room_loc[Y] = 0<<16;
-	room_loc[Z] = 0*grid;
-	room_angle[X] = DEGtoANG(90.0);
-	room_angle[Y] = 0;
-	room_angle[Z] = 0;
-	create_object(room_loc, room_angle, 0);
-	
-	//	Room 2
-	room_loc[X] = 0;
-	room_loc[Y] = 0<<16;
-	room_loc[Z] = 1*grid;
-	room_angle[X] = 0;
-	room_angle[Y] = 0;
-	room_angle[Z] = 0;
-	create_object(room_loc, room_angle, 0);
-	
-	//	Room 3
-	room_loc[X] = 0;
-	room_loc[Y] = 0<<16;
-	room_loc[Z] = 2*grid;
-	room_angle[X] = 0;
-	room_angle[Y] = 0;
-	room_angle[Z] = 0;
-	create_object(room_loc, room_angle, 0);
-	
-	//	Room 4
-	room_loc[X] = 0;
-	room_loc[Y] = 0<<16;
-	room_loc[Z] = 3*grid;
-	room_angle[X] = -DEGtoANG(90.0);
-	room_angle[Y] = 0;
-	room_angle[Z] = 0;
-	create_object(room_loc, room_angle, 0);
-	
-	return;
-}
-
 
 void jo_main(void)
 {
@@ -440,20 +476,16 @@ void jo_main(void)
 	slPerspective(FOV);
 	
 	//	Background Layer
-	
 	jo_img bg;
     bg.data = NULL;
     jo_tga_loader(&bg, "BG", "BG3.TGA", JO_COLOR_Transparent);
     jo_set_background_sprite(&bg, 0, 0);
     jo_free_img(&bg);
-	
 	//bg_init(0);
-	
-	
 
 	//	Load assets
 	load_ref();		//	Load 3D Object
-	//load_rooms();	//	Load in rooms
+	load_game_objects();	//	Load test game objects
 	
 	//	Prepare NBGH layers
 	slScrAutoDisp(NBG0ON | NBG1ON | NBG3ON | SPRON);
@@ -462,7 +494,6 @@ void jo_main(void)
 	initialize_rooms();
 	generate_rooms();
 	map_rooms();	
-	//load_rooms_object();
 
 	//	Initialize player colission
 	player_bbox_init();

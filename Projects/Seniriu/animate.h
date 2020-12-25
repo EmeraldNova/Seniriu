@@ -3,39 +3,57 @@
 #ifndef __ANIMATE_H__
 #define __ANIMATE_H__
 
+//	Includes
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 
-#include "game_object.h"
-
+//	Definitions
 #define ANIM_CONST (8)
 //	Maximum number of animations supported by a model
-#define MAX_ANI (6)		
+#define MAX_ANI (10)
+//	Maximum number of frames in an animation
+#define MAX_FRAMES (80)
 
+//	Structs
 typedef struct
 {
-    Bool uniform;
-    Uint8 arate[256];
-    Uint16 currentFrm;
+	/*
+		Animation Control Struct
+	*/
+	
+	//	Gives total number of frames in an animation
+	Uint8 last_frame[MAX_ANI];
+	//	Gives keyframe sequence for animation
+    Uint8 frames[MAX_ANI][MAX_FRAMES];
+	/*
+		Animation index list
+		0	-	Idle
+		1	-	Walk
+		2	-	Run
+		3	-	Attack0
+		4	-	Attack1
+		5	-	Attack2
+		6	-	
+		7	-
+		8	-
+		9	-
+	*/
+	
+	//	Current animation index
+	Uint8 currentAni;
+	//	Current frame index
+    Uint8 currentFrm;
+	//	Current keyframe
     Uint8 currentKeyFrm;
-    Uint8 startFrm;
-    Uint8 endFrm;
+	
 } animationControl;
-
-//	Animation master list, row = entity, col = animation
-extern animationControl animationMaster[MAX_MODELS][MAX_ANI];
-/*
-	0	-	Idle
-	1	-	Walk
-	2	-	Run
-*/
 
 //	Framerate definitions (different integer types for different context)
 extern Sint8 SynchConst;
 extern Sint32 framerate;
-/****/
 
-void display_animated_model(game_object *obj, int ani_ID);
+
+//	Functions
 
 
 #endif

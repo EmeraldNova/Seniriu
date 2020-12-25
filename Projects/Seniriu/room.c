@@ -371,8 +371,8 @@ void draw_rooms(void)
 	}
 	//	Print Current Room
 	jo_set_printf_color_index(JO_COLOR_INDEX_Red);
-	jo_printf(0,print_line++,"Current Room %d,%d,%d",
-		current_room[X], current_room[Y], current_room[Z]);
+	//jo_printf(0,print_line++,"Current Room %d,%d,%d",
+	//	current_room[X], current_room[Y], current_room[Z]);
 	
 	//	Find visible rooms using integer angles
 	//	ANGLE / 182.04 (4 repeating) = degrees as ints
@@ -477,15 +477,17 @@ void draw_rooms(void)
 		}
 	}
 	//	Print visible room info
+	/*
 	jo_printf(0,print_line++,"Visible rooms: %d, Max Rooms: %d       ", num_vis, MAX_ROOM_DISPLAY);
+	jo_printf(0,print_line++,"                                        ");
+	jo_printf(0,print_line++,"                                        ");
+	jo_printf(0,print_line++,"                                        ");
+	jo_printf(0,print_line++,"                                        ");
+	jo_printf(0,print_line++,"                                        ");
+	jo_printf(0,print_line++,"                                        ");
+	jo_printf(0,print_line++,"                                        ");
+	*/
 	num_vis = JO_MIN(num_vis, MAX_ROOM_DISPLAY);
-	jo_printf(0,print_line++,"                                        ");
-	jo_printf(0,print_line++,"                                        ");
-	jo_printf(0,print_line++,"                                        ");
-	jo_printf(0,print_line++,"                                        ");
-	jo_printf(0,print_line++,"                                        ");
-	jo_printf(0,print_line++,"                                        ");
-	jo_printf(0,print_line++,"                                        ");
 	
 	//	Generate list of rooms to draw
 	int room_draw_coords[MAX_ROOM_DISPLAY][3];

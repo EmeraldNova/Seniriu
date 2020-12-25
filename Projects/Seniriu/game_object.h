@@ -9,16 +9,24 @@
 #ifndef __GAME_OBJECT_H__
 #define __GAME_OBJECT_H__
 
+//	Includes
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 #include "separate_3D.h"
 #include "input.h"
-
+#include "animate.h"
+//#include "ZT/ANORM.h"
 
 #define MAX_OBJECTS (10)
 
-//  Game Object containing necessary items for rendering
+//	Structs
 typedef struct {
+	/*
+		Game Object
+		
+		Game Object containing necessary items for rendering
+	*/
+	
 	//	ID
 	int ID;
 	
@@ -47,10 +55,10 @@ typedef struct {
 	//	Pointer to entity to render
 	XPDATA *pDataStart;
 	
-	//	Animation Control Frames
-	Uint16 currentFrm;
-    Uint8 currentKeyFrm;
-}game_object;
+	//	Animation Control
+	animationControl ani_con;
+	
+} game_object;
 
 //  Array of game objects
 extern int max_objects;
@@ -70,5 +78,6 @@ bool is_colliding(int x, int y, int z, int x_size, int y_size, int z_size);
 void apply_accel(int ID, FIXED accel[XYZ]);
 void apply_accel_all(FIXED accel[XYZ]);
 void update_obj_position(void);
+void display_animated_model(int objdex);
 
 #endif

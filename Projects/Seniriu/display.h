@@ -13,7 +13,7 @@
 #include <jo/jo.h>
 
 //	Definitions
-#define MAX_ROOM_DISPLAY (5)
+#define MAX_ROOM_DISPLAY (7)
 
 //	Variables
 //	(full) Field of View

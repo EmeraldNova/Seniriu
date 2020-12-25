@@ -113,6 +113,15 @@ void gamepad_input(void)
 		add_rel_pos(0,-move_inc,0);
     if (jo_is_pad1_key_pressed(JO_KEY_C))
 		add_rel_pos(0,move_inc,0);
+	if (jo_is_pad1_key_down(JO_KEY_A))
+	{
+		//	Change animation of first object
+		object[0].ani_con.currentAni++;
+		if(object[0].ani_con.currentAni > 1)
+		{
+			object[0].ani_con.currentAni = 0;
+		}
+	}
 	
 	//	Update target
 	forward_target(tar_dist);

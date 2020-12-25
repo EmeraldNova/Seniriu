@@ -7,6 +7,8 @@
 */
 
 #include "game_object.h"
+//	Any attempt to sanitize this include will break the game. Likely due to a lack of ANORM.c
+#include "ZT/ANORM.h"
 
 //  Array of game objects
 int max_objects = MAX_OBJECTS;
@@ -76,6 +78,20 @@ void create_object(FIXED position[XYZ], ANGLE rot[XYZ], int entity_ID)
 		VECTOR center = {0, 0, 0};
 		create_bbox(&boxes[object[num_object].ID], center,
 				1 << 16, 1 << 16, 1 << 16, object[num_object].ID);
+				
+		//	Initialize animation controller
+		object[num_object].ani_con.currentAni = 0;
+		object[num_object].ani_con.currentFrm = 0;
+		object[num_object].ani_con.currentKeyFrm = 0;
+		for(int i = 0; i < MAX_ANI; i++)
+		{
+			object[num_object].ani_con.last_frame[i] = 0;
+			
+			for(int j = 0; j < MAX_FRAMES; j++)
+			{
+				object[num_object].ani_con.frames[i][j] = 0;
+			}
+		}
 				
 		//	Increment object number
 		num_object++;
@@ -207,4 +223,77 @@ void update_obj_position(void)
 }
 
 
+void display_animated_model(int objdex)
+{
+	/*
+		Display animated Model
+		
+		Handles animations by keyframe/frame
+	*/
+	
+	//	Master entity pointer
+	entity_t *currentModel = &entities[object[objdex].entity_ID];
+	//	pData pointer
+	XPDATA *currentPDATA = object[objdex].pDataStart;
+	
+	//	Animation sequence to use
+	Uint8 anidex = object[objdex].ani_con.currentAni;
+	Uint8 num_frames = object[objdex].ani_con.last_frame[anidex];
+	
+	//	Curent frame in sequence in animation_sequence
+	(object[objdex].ani_con.currentFrm)++;
+	if(object[objdex].ani_con.currentFrm > num_frames)
+	{
+		object[objdex].ani_con.currentFrm = 0;
+	}
+	slPrint("Frame Count:",slLocate(0,7 + 2*objdex));
+	slPrintFX(toFIXED(object[objdex].ani_con.currentFrm),slLocate(12,7 + 2*objdex));
+	
+	//	Set keyframe
+	Uint8 currentKeyFrm = object[objdex].ani_con.frames[anidex][object[objdex].ani_con.currentFrm];
+	slPrint("Key Frame:",slLocate(0,8 + 2*objdex));
+	slPrintFX(toFIXED(currentKeyFrm),slLocate(12,8 + 2*objdex));
+	
+	//	Set get compressed vertex pointers for current and next frames
+	compVert *curFrameCV = 
+		(compVert*)currentModel->animation[currentKeyFrm]->cVert;
+	
+	//	Indexing register per quad
+	register Uint32    i;
+	
+	//	Pointers to point table and keyframes
+	Sint32 *dst = currentPDATA->pntbl[0];
+	Sint16 *src = curFrameCV[0];
+	
+	//	Write animation verts to current PDATA
+	for (i = 0; i < currentPDATA->nbPoint*sizeof(POINT); i += sizeof(int))
+	{
+		*dst++ = (*src)<<8;
+		*src++;
+	}
+	
+	//	Take normal lookup table and apply it
+	//	Current PDATA's normals
+	*dst = currentPDATA->pltbl[0].norm[0];
+	//	Normals for current animation frame
+	Uint8 *src2 = currentModel->animation[currentKeyFrm]->cNorm;
+	
+	//	Apply normals to quads
+	for (i = 0; i < currentPDATA->nbPolygon; i++)
+	{
+		//	Normal XYZ
+		*dst++ = ANORMS[*src2][X];
+		*dst++ = ANORMS[*src2][Y];
+		*dst++ = ANORMS[*src2++][Z];
+		
+		//	Skip over 16 bit vertex IDs
+		*dst++;
+		*dst++;
+	}
+	
+	//	Draw command
+	slPutPolygon((PDATA*)currentPDATA);
+	
+	return;
+}
 

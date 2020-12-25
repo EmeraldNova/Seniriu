@@ -39,13 +39,13 @@
 #include <jo/jo.h>
 #include "ZT/ZT_COMMON.h"
 #include "display.h"
-#include "bg.h"
-#include "separate_3D.h"
+#include "game_object.h"
 #include "animate.h"
 #include "input.h"
-#include "game_object.h"
 #include "collision.h"
 #include "room.h"
+#include "bg.h"
+#include "separate_3D.h"
 
 /**Functions/variables added by XL2 **/
 /**Added by XL2 to use my own CD loading functions**/
