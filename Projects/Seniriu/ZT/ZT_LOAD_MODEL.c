@@ -27,12 +27,18 @@ void setTextures(Uint32 id, entity_t * model, unsigned int total_meshes, Bool Us
                 {
                     if (model->pol[i]->attbl[ii].atrb & SPdis)
                     {
-                        ATTR bufAttr = ATTRIBUTE(model->pol[i]->attbl[ii].flag, model->pol[i]->attbl[ii].sort&0x03 , model->pol[i]->attbl[ii].texno, model->pol[i]->attbl[ii].colno, GRtbl(gouraudCounter), Window_In|MESHoff|HSSon|ECdis|SPdis|CL16Look|CL_Gouraud, sprNoflip, UseGouraud|UseNearClip);
+                        ATTR bufAttr = ATTRIBUTE(model->pol[i]->attbl[ii].flag,
+						//model->pol[i]->attbl[ii].sort&0x03 ,
+						SORT_MAX,
+						model->pol[i]->attbl[ii].texno, model->pol[i]->attbl[ii].colno, GRtbl(gouraudCounter), Window_In|MESHoff|HSSon|ECdis|SPdis|CL16Look|CL_Gouraud, sprNoflip, UseGouraud|UseNearClip);
                         model->pol[i]->attbl[ii] = bufAttr;
                     }
                     else
                     {
-                        ATTR bufAttr = ATTRIBUTE(model->pol[i]->attbl[ii].flag, model->pol[i]->attbl[ii].sort&0x03, model->pol[i]->attbl[ii].texno, model->pol[i]->attbl[ii].colno, GRtbl(gouraudCounter), Window_In|MESHoff|HSSon|ECdis|SPenb|CL16Look|CL_Gouraud, sprNoflip, UseGouraud|UseNearClip);
+                        ATTR bufAttr = ATTRIBUTE(model->pol[i]->attbl[ii].flag,
+						//model->pol[i]->attbl[ii].sort&0x03,
+						SORT_MAX,
+						model->pol[i]->attbl[ii].texno, model->pol[i]->attbl[ii].colno, GRtbl(gouraudCounter), Window_In|MESHoff|HSSon|ECdis|SPenb|CL16Look|CL_Gouraud, sprNoflip, UseGouraud|UseNearClip);
                         model->pol[i]->attbl[ii] = bufAttr;
                     }
                     gouraudCounter++;
@@ -42,7 +48,10 @@ void setTextures(Uint32 id, entity_t * model, unsigned int total_meshes, Bool Us
             {
                 if (UseRealtimeGouraud==true)
                 {
-                    ATTR bufAttr = ATTRIBUTE(model->pol[i]->attbl[ii].flag, model->pol[i]->attbl[ii].sort&0x03, No_Texture, model->pol[i]->attbl[ii].colno, GRtbl(gouraudCounter), CL32KRGB|MESHoff|Window_In|CL_Gouraud, sprPolygon, UseGouraud|UseNearClip);
+                    ATTR bufAttr = ATTRIBUTE(model->pol[i]->attbl[ii].flag, 
+					//model->pol[i]->attbl[ii].sort&0x03,
+					SORT_MAX,
+					No_Texture, model->pol[i]->attbl[ii].colno, GRtbl(gouraudCounter), CL32KRGB|MESHoff|Window_In|CL_Gouraud, sprPolygon, UseGouraud|UseNearClip);
                     model->pol[i]->attbl[ii] = bufAttr;
                     gouraudCounter++;
                 }

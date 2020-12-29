@@ -13,10 +13,12 @@
 #include <jo/jo.h>
 
 //	Definitions
-#define MAX_ROOM_DISPLAY (7)
+#define MAX_ROOM_DISPLAY (8)
 
 //	Variables
 //	(full) Field of View
 extern ANGLE FOV;
+//	Scaling factor
+extern FIXED scale_factor;
 
 #endif

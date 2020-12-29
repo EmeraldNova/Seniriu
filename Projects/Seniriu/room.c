@@ -19,8 +19,7 @@ int current_room[XYZ];
 FIXED room_grid[XYZ];
 //	Total Room Count
 int room_num = 0;
-//	Scaling factor
-FIXED scale_factor = toFIXED(1.0);
+
 
 //	Functions
 void initialize_rooms(void)
@@ -32,9 +31,9 @@ void initialize_rooms(void)
 	*/
 	
 	//	Initialize settings
-	room_grid[X] = slMulFX(10<<16,scale_factor);
-	room_grid[Y] = slMulFX( 6<<16,scale_factor);
-	room_grid[Z] = slMulFX(10<<16,scale_factor);
+	room_grid[X] = slMulFX(10<<16,scale_factor)<<4;
+	room_grid[Y] = slMulFX( 6<<16,scale_factor)<<4;
+	room_grid[Z] = slMulFX(10<<16,scale_factor)<<4;
 	cam_default_height = slMulFX(toFIXED(1.8),scale_factor);
 	move_inc = slMulFX(8000,scale_factor);
 	

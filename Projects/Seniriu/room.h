@@ -89,8 +89,7 @@ extern int current_room[XYZ];
 extern FIXED room_grid[XYZ];
 //	Room Count
 extern int room_num;
-//	Scaling factor
-extern FIXED scale_factor;
+
 
 //	Functions
 void initialize_rooms(void);

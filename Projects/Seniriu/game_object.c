@@ -291,6 +291,9 @@ void display_animated_model(int objdex)
 		*dst++;
 	}
 	
+	//	Scale
+	slScale(scale_factor, scale_factor, scale_factor);
+	
 	//	Draw command
 	slPutPolygon((PDATA*)currentPDATA);
 	

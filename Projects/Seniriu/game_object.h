@@ -15,6 +15,7 @@
 #include "separate_3D.h"
 #include "input.h"
 #include "animate.h"
+#include "display.h"
 //#include "ZT/ANORM.h"
 
 #define MAX_OBJECTS (10)

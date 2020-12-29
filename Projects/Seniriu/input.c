@@ -14,11 +14,11 @@ ANGLE theta[XYZ] = {DEGtoANG(0.0),DEGtoANG(0.0),DEGtoANG(0.0)};
 //	Camera Position
 FIXED pl_position[XYZ] = {0,0,0};				
 //	Default interaction target distance
-FIXED tar_dist = 5 << 16;	
+//FIXED tar_dist = 5 << 16;	
 //	Distance from target allow for interaction
-FIXED tar_sense = 16384;	//	0.25 FIXED
+//FIXED tar_sense = 16384;	//	0.25 FIXED
 //	Interaction target position
-FIXED target[XYZ] = {0,0,5 << 16};
+//FIXED target[XYZ] = {0,0,5 << 16};
 
 //	Repeat Input Delay
 FIXED input_delay = 13107;	//	0.2 FIXED
@@ -52,11 +52,11 @@ void add_rel_pos(FIXED x, FIXED y, FIXED z)
 //	Calculate forward coordinate for target based on distance and orientation
 void forward_target(FIXED dist)
 {
-	target[Y] = pl_position[Y];
+	//target[Y] = pl_position[Y];
 	
 	//	Add to coordinate according to rotation
-	target[X] = pl_position[X] + slMulFX(dist,slSin(theta[Y]));
-	target[Z] = pl_position[Z] + slMulFX(dist,slCos(theta[Y]));
+	//target[X] = pl_position[X] + slMulFX(dist,slSin(theta[Y]));
+	//target[Z] = pl_position[Z] + slMulFX(dist,slCos(theta[Y]));
 }
 
 //  Handle Input from Gamepad
@@ -69,10 +69,10 @@ void gamepad_input(void)
 	*/
 	
 	//	Set default height
-	cam_default_height = slMulFX(toFIXED(1.5),scale_factor);
+	cam_default_height = slMulFX(toFIXED(1.5)<<4,scale_factor);
 	
 	//	Set speed of movement
-	move_inc = slMulFX(8000,scale_factor);
+	move_inc = slMulFX(8000<<4,scale_factor);
 
 	//	Poll for gamepad
 	if (!jo_is_pad1_available())
@@ -85,13 +85,13 @@ void gamepad_input(void)
 	{
 		//	Running
 		speed *= 3;
-		cam_height -= slMulFX(toFIXED(0.05),scale_factor);
+		cam_height -= slMulFX(toFIXED(0.05)<<4,scale_factor);
 	}
 	if (jo_is_pad1_key_pressed(JO_KEY_Y))
 	{
 		//	Sneaking
 		speed /= 4;
-		cam_height -= slMulFX(toFIXED(0.8),scale_factor);;
+		cam_height -= slMulFX(toFIXED(0.8)<<4,scale_factor);;
 	}
 	move_inc = speed;
 		
@@ -124,7 +124,7 @@ void gamepad_input(void)
 	}
 	
 	//	Update target
-	forward_target(tar_dist);
+	//forward_target(tar_dist);
 	
 	//	Button Presses
 	/*

@@ -12,3 +12,5 @@
 //	(full) Field of View
 ANGLE FOV = DEGtoANG(60.0);
 
+//	Scaling factor
+FIXED scale_factor = toFIXED(1.0);

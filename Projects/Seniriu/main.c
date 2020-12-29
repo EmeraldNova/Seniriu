@@ -35,21 +35,6 @@
 
 #include "main.h"
 
-//VECTOR lighting_direction = {0, 32767, 0};
-
-
-//	Added by XL2 - Very basic function to display a 3D model
-void display_model(entity_t * model)
-{
-    int i;
-    for (i=0; i<model->nbMeshes; i++)
-    {
-	   slPutPolygon((PDATA*)model->pol[i]);
-    }
-}
-//	End of added functions and global variables
-
-
 //	Number of models to load
 Uint32 nbModels = 1;
 
@@ -74,7 +59,7 @@ void load_ref(void)
 		"CORNER.ZTP",
 		"DOOR.ZTP",
 		"WINDOW.ZTP",
-		"JELLY.ZTP",
+		"BLOBB.ZTP",
 		"BLOBB.ZTP"
 	};
 	
@@ -125,9 +110,9 @@ void load_ref(void)
 			entities[ent_ID].pol[0]->attbl[i].sort &= ~UseLight;
 			
 			//	Clear Sort
-			//entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
+			entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
 			//	Max sort default
-			//entities[ent_ID].pol[0]->attbl[i].sort |= SORT_CEN;
+			entities[ent_ID].pol[0]->attbl[i].sort |= SORT_MAX;
 			
 			//	Special flags for select objects
 			if(ent_ID == 6)
@@ -136,8 +121,8 @@ void load_ref(void)
 				entities[ent_ID].pol[0]->attbl[i].atrb |= MESHon;
 				
 				//	Change Z sort
-				//entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
-				//entities[ent_ID].pol[0]->attbl[i].sort |= SORT_MAX;
+				entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
+				entities[ent_ID].pol[0]->attbl[i].sort |= SORT_MIN;
 			}
 			
 			//	Determine Chief Normal
@@ -339,11 +324,12 @@ void load_game_objects(void)
 	*/
 	
 	//	Load model at position
-	FIXED position[XYZ] = {2<<16, -(1<<15), 2<<16};
+	FIXED position[XYZ] = {30<<16, -(00<<15), 30<<16};
 	ANGLE rot[XYZ] = {0, DEGtoANG(180.0), 0};
 	
 	
 	//	Object 0
+	/*
 	create_object(position, rot, 5);
 	object[num_object-1].ani_con.currentAni = 1;
 	object[num_object-1].ani_con.currentFrm = 0;
@@ -382,12 +368,12 @@ void load_game_objects(void)
 	object[num_object-1].ani_con.frames[1][27] = 1;
 	object[num_object-1].ani_con.frames[1][28] = 1;
 	object[num_object-1].ani_con.frames[1][29] = 1;
-	
+	*/
 	
 	//	Object 1
-	position[X] = 0<<16;
-	position[Y] = -(1<<6);
-	position[Z] = 2<<16;
+	position[X] = (0<<16);
+	position[Y] = -(0<<6);
+	position[Z] = (0<<16);
 	rot[Y] = DEGtoANG(90.0);
 	create_object(position, rot, 6);
 	object[num_object-1].ani_con.currentAni = 2;
