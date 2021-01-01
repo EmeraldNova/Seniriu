@@ -11,6 +11,7 @@
 //	Orientation data
 //	Camera angle away from -Z
 ANGLE theta[XYZ] = {DEGtoANG(0.0),DEGtoANG(0.0),DEGtoANG(0.0)};
+ANGLE theta2 = 0;
 //	Camera Position
 FIXED pl_position[XYZ] = {0,0,0};				
 
@@ -86,6 +87,8 @@ void gamepad_input(void)
 		entity_ID += 1;
 	if (jo_is_pad1_key_down(JO_KEY_Y))
 		entity_ID = JO_MAX(0, entity_ID-1);
+	if (jo_is_pad1_key_down(JO_KEY_START))
+		theta2 += DEGtoANG(90.0);
 	
 	return;
 }
@@ -100,6 +103,8 @@ void print_orientation(void)
 	slPrint("Framerate:",slLocate(19,1));
 	slPrintFX(slDivFX(delta_time,1 << 16),slLocate(29,1));
 	slPrint("FPS",slLocate(37,1));
+	slPrintFX(slAng2FX(theta2),slLocate(6,0));
+	slPrint("Angle",slLocate(0,0));
 	
 	
 	slPrint("  Position     Rotation      # Rendered",slLocate(0,2));

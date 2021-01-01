@@ -8,7 +8,7 @@
 
 #include "game_object.h"
 //	Any attempt to sanitize this include will break the game. Likely due to a lack of ANORM.c
-#include "ZT/ANORM.h"
+//#include "ZT/ANORM.h"
 
 //  Array of game objects
 int max_objects = MAX_OBJECTS;
@@ -231,6 +231,9 @@ void display_animated_model(int objdex)
 		Handles animations by keyframe/frame
 	*/
 	
+	display_animated(object[objdex].entity_ID, &object[objdex].ani_con);
+	
+	/*
 	//	Master entity pointer
 	entity_t *currentModel = &entities[object[objdex].entity_ID];
 	//	pData pointer
@@ -246,13 +249,13 @@ void display_animated_model(int objdex)
 	{
 		object[objdex].ani_con.currentFrm = 0;
 	}
-	slPrint("Frame Count:",slLocate(0,7 + 2*objdex));
-	slPrintFX(toFIXED(object[objdex].ani_con.currentFrm),slLocate(12,7 + 2*objdex));
+	//slPrint("Frame Count:",slLocate(0,7 + 2*objdex));
+	//slPrintFX( toFIXED(object[objdex].ani_con.currentFrm), slLocate(12,7 + 2*objdex));
 	
 	//	Set keyframe
 	Uint8 currentKeyFrm = object[objdex].ani_con.frames[anidex][object[objdex].ani_con.currentFrm];
-	slPrint("Key Frame:",slLocate(0,8 + 2*objdex));
-	slPrintFX(toFIXED(currentKeyFrm),slLocate(12,8 + 2*objdex));
+	//slPrint("Key Frame:",slLocate(0,8 + 2*objdex));
+	//slPrintFX(toFIXED(currentKeyFrm),slLocate(12,8 + 2*objdex));
 	
 	//	Set get compressed vertex pointers for current and next frames
 	compVert *curFrameCV = 
@@ -296,6 +299,7 @@ void display_animated_model(int objdex)
 	
 	//	Draw command
 	slPutPolygon((PDATA*)currentPDATA);
+	*/
 	
 	return;
 }

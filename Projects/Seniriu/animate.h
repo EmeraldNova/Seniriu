@@ -8,11 +8,12 @@
 #include "ZT/ZT_COMMON.h"
 
 //	Definitions
+//	Constant used in animation calculation
 #define ANIM_CONST (8)
 //	Maximum number of animations supported by a model
 #define MAX_ANI (10)
 //	Maximum number of frames in an animation
-#define MAX_FRAMES (80)
+#define MAX_FRAMES (128)
 
 //	Structs
 typedef struct
@@ -54,6 +55,6 @@ extern Sint32 framerate;
 
 
 //	Functions
-
+void display_animated(int ent_ID, animationControl * ani_con);
 
 #endif

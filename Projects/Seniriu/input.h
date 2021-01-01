@@ -13,9 +13,10 @@
 #include "ZT/ZT_COMMON.h"
 #include "game_object.h"
 #include "room.h"
+#include "character.h"
 
 //	Orientation data
-extern ANGLE theta[XYZ];		//	Camera angle away from -Z
+//extern ANGLE theta[XYZ];		//	Camera angle away from -Z
 extern FIXED height;			//	Camera (player) height		
 extern FIXED pl_position[XYZ];	//	Camera Position
 extern FIXED tar_dist;			//	Default interaction target distance
@@ -37,7 +38,7 @@ extern FIXED last_input;
 extern Sint8 SynchConst;
 
 //	Functions
-void add_rel_pos(FIXED x, FIXED y, FIXED z);
+void add_rel(FIXED add[XYZ], ANGLE theta[XYZ], FIXED store[XYZ]);
 void gamepad_input(void);
 void print_orientation(void);
 

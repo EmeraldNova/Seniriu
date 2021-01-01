@@ -14,6 +14,9 @@
 #include "ZT/ZT_COMMON.h"
 #include "display.h"
 #include "input.h"
+#include "character.h"
+#include "loading.h"
+#include "physics.h"
 
 //	Definitions
 #define ROOM_NUM_X (10)
@@ -43,7 +46,7 @@ typedef struct {
 	*/
 	
 	//	XPData pointer
-	XPDATA *pDataStart;
+	//XPDATA *pDataStart;
 	
 	//	Adjacet doors
 	/*
@@ -76,6 +79,9 @@ typedef struct {
 	bool vis;
 	//	Distance from current room (Manhatten)
 	int dist[XYZ];
+	
+	//	Collision planes to use
+	bool planes[NUM_PLANES];
 }room;
 
 //	Variables
@@ -84,7 +90,7 @@ extern XPDATA *pdataRoomMaster[ROOM_NUM_X][ROOM_NUM_Y][ROOM_NUM_Z];
 //	Room container 
 extern room roomMaster[ROOM_NUM_X][ROOM_NUM_Y][ROOM_NUM_Z];
 //	Current room contianing camera
-extern int current_room[XYZ];
+//extern int current_room[XYZ];
 //	Grid spacing
 extern FIXED room_grid[XYZ];
 //	Room Count
@@ -96,7 +102,6 @@ void initialize_rooms(void);
 void create_room(int position[XYZ]);
 void map_rooms(void);
 void draw_rooms(void);
-void load_rooms(void);
 void generate_rooms(void);
 
 

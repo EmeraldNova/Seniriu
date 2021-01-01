@@ -37,7 +37,6 @@
 
 //VECTOR lighting_direction = {0, 32767, 0};
 
-
 //	Added by XL2 - Very basic function to display a 3D model
 void display_model(entity_t * model)
 {
@@ -66,15 +65,19 @@ void load_ref(void)
     void * currentAddress = (void*)LWRAM;
 	
 	//	File names
-	#define NUM_FILES  (6)
+	#define NUM_FILES  (10)
 	const Sint8 * filenames[NUM_FILES] = 
 	{
-		"COR4.ZTP",
-		"FLOOR.ZTP",
+		"SABR0.ZTP",
+		"PHASR.ZTP",
 		"CEIL.ZTP",
 		"CORNER.ZTP",
 		"DOOR.ZTP",
-		"WINDOW.ZTP"
+		"WINDOW.ZTP",
+		"RAMP.ZTP",
+		"HULL0.ZTP",		//	Hull Wall
+		"HLEX0.ZTP",		//	Hull Exterior Angle
+		"HLIN0.ZTP"			//	Hull Interior Angle
 	};
 	
 	
@@ -127,6 +130,10 @@ void load_ref(void)
 			//	Enable depth shading
 			//entities[ent_ID].pol[0]->attbl[i].sort &= ~UseGouraud;
 			//entities[ent_ID].pol[0]->attbl[i].sort |= UseDepth;
+			
+			//	Change Z sort
+			entities[ent_ID].pol[0]->attbl[i].sort &= ~3;
+			entities[ent_ID].pol[0]->attbl[i].sort |= SORT_MIN;
 			
 			//	Determine Chief Normal
 			int norm;
@@ -276,7 +283,7 @@ void my_draw(void)
 	int num_rendered = 0;
 	int grid_x_disp = 0;
 	int grid_x_disp_max = 0;
-	FIXED displacement = 10<<16;
+	FIXED displacement = (10<<16)<<4;
 	while(num_rendered < num_object)
 	{
 		slPushMatrix();		//	Advance matrix buffer pointer 1 step
@@ -287,6 +294,11 @@ void my_draw(void)
 		slTranslate(grid_x_disp * displacement - pl_position[X],
 			- pl_position[Y] + cam_height,
 			(grid_x_disp_max - grid_x_disp) * displacement -pl_position[Z]);	
+	
+		//	Scale
+		//slScale(1<<12,1<<12,1<<12);	
+	
+		slRotY(theta2);
 	
 		//	Draw
 		slPutPolygon((XPDATA*)entities[entity_ID].pol[0]);

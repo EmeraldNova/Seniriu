@@ -16,6 +16,7 @@
 
 //	Orientation data
 extern ANGLE theta[XYZ];		//	Camera angle away from -Z
+extern ANGLE theta2;
 extern FIXED height;			//	Camera (player) height		
 extern FIXED pl_position[XYZ];	//	Camera Position
 extern FIXED tar_dist;			//	Default interaction target distance

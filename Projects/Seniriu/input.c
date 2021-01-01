@@ -10,7 +10,7 @@
 
 //	Orientation data
 //	Camera angle away from -Z
-ANGLE theta[XYZ] = {DEGtoANG(0.0),DEGtoANG(0.0),DEGtoANG(0.0)};
+//ANGLE theta[XYZ] = {DEGtoANG(0.0),DEGtoANG(0.0),DEGtoANG(0.0)};
 //	Camera Position
 FIXED pl_position[XYZ] = {0,0,0};				
 //	Default interaction target distance
@@ -31,22 +31,21 @@ FIXED cam_height;
 //	Player movement
 FIXED move_inc;
 
-//	Add relative change to position coordinate
-void add_rel_pos(FIXED x, FIXED y, FIXED z)
+//	Functions
+void add_rel(FIXED add[XYZ], ANGLE theta[XYZ], FIXED store[XYZ])
 {
-	//	Y is invariant under y-axis rotation
-	pl_position[Y] += y;
-	//	Floor is 0
 	/*
-	if(pl_position[Y]>0)
-	{
-		pl_position[Y] = 0;
-	}
+		Add Relative Change
+		
+		Adds a vector to another after performing rotations
 	*/
-	
+
 	//	Add to coordinate according to rotation
-	pl_position[X] += slMulFX(x,slCos(theta[Y])) + slMulFX(z,slSin(theta[Y]));
-	pl_position[Z] += slMulFX(z,slCos(theta[Y])) - slMulFX(x,slSin(theta[Y]));
+	store[X] += slMulFX(add[X],slCos(theta[Y])) + slMulFX(add[Z],slSin(theta[Y]));
+	store[Y] += add[Y];
+	store[Z] += slMulFX(add[Z],slCos(theta[Y])) - slMulFX(add[X],slSin(theta[Y]));
+	
+	return;
 }
 
 //	Calculate forward coordinate for target based on distance and orientation
@@ -57,6 +56,8 @@ void forward_target(FIXED dist)
 	//	Add to coordinate according to rotation
 	//target[X] = pl_position[X] + slMulFX(dist,slSin(theta[Y]));
 	//target[Z] = pl_position[Z] + slMulFX(dist,slCos(theta[Y]));
+	
+	return;
 }
 
 //  Handle Input from Gamepad
@@ -69,10 +70,10 @@ void gamepad_input(void)
 	*/
 	
 	//	Set default height
-	cam_default_height = slMulFX(toFIXED(1.5)<<4,scale_factor);
+	cam_default_height = toFIXED(1.5);
 	
 	//	Set speed of movement
-	move_inc = slMulFX(8000<<4,scale_factor);
+	move_inc = (50<<16);
 
 	//	Poll for gamepad
 	if (!jo_is_pad1_available())
@@ -80,39 +81,98 @@ void gamepad_input(void)
 	
 	//	Speed Modifier
 	cam_height = cam_default_height;
-	FIXED speed = move_inc;
-	if (jo_is_pad1_key_pressed(JO_KEY_B))
+	if (jo_is_pad1_key_pressed(JO_KEY_Z))
 	{
 		//	Running
-		speed *= 3;
-		cam_height -= slMulFX(toFIXED(0.05)<<4,scale_factor);
+		move_inc *= 3;
+		cam_height -= jo_fixed_mult(toFIXED(0.05), cam_default_height);
 	}
 	if (jo_is_pad1_key_pressed(JO_KEY_Y))
 	{
 		//	Sneaking
-		speed /= 4;
-		cam_height -= slMulFX(toFIXED(0.8)<<4,scale_factor);;
+		player.sneaking = true;
+		move_inc /= 4;
+		cam_height -= jo_fixed_mult(toFIXED(0.05), cam_default_height);
 	}
-	move_inc = speed;
+	else
+	{
+		player.sneaking = false;
+	}
 		
 	
 	//	Directional
-	if (jo_is_pad1_key_pressed(JO_KEY_UP))
-		add_rel_pos(0,0,move_inc);
-    if (jo_is_pad1_key_pressed(JO_KEY_DOWN))
-		add_rel_pos(0,0,-move_inc);
+	//	Turning
 	if (jo_is_pad1_key_pressed(JO_KEY_LEFT))
-		theta[Y] -= (DEGtoANG(3.0));
-    if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
-		theta[Y] += (DEGtoANG(3.0));
-    if (jo_is_pad1_key_pressed(JO_KEY_L))
-		add_rel_pos(-move_inc,0,0);
-    if (jo_is_pad1_key_pressed(JO_KEY_R))
-		add_rel_pos(move_inc,0,0);
-	if (jo_is_pad1_key_pressed(JO_KEY_Z))
-		add_rel_pos(0,-move_inc,0);
-    if (jo_is_pad1_key_pressed(JO_KEY_C))
-		add_rel_pos(0,move_inc,0);
+	{
+		//	Rotate left, convert FIXED time to ANGLE
+		player.theta[Y] -= jo_fixed_mult(360,(45*delta_time));
+	}
+	if (jo_is_pad1_key_pressed(JO_KEY_RIGHT))
+	{
+		//	Rotate right, convert FIXED time to ANGLE
+		player.theta[Y] += jo_fixed_mult(360,(45*delta_time));
+	}
+
+	//	Movement
+	FIXED acc[XYZ] = {0, 0, 0};
+	FIXED add[XYZ];
+	if(player.colliding)
+	{
+		if (jo_is_pad1_key_pressed(JO_KEY_UP))
+		{
+			//	Move Forward
+			add[X] = 0;
+			add[Y] = 0;
+			add[Z] = move_inc;
+			add_rel(add, player.theta, acc);
+			//add_rel_pos(0,0,move_inc);
+		}
+		if (jo_is_pad1_key_pressed(JO_KEY_DOWN))
+		{	
+			//	Move Backward
+			add[X] = 0;
+			add[Y] = 0;
+			add[Z] = -move_inc;
+			add_rel(add, player.theta, acc);
+			//add_rel_pos(0,0,-move_inc);
+		}
+		if (jo_is_pad1_key_pressed(JO_KEY_L))
+		{
+			//	Move Left
+			add[X] = -move_inc;
+			add[Y] = 0;
+			add[Z] = 0;
+			add_rel(add, player.theta, acc);
+			//add_rel_pos(-move_inc,0,0);
+		}
+		if (jo_is_pad1_key_pressed(JO_KEY_R))
+		{
+			//	Move Right
+			add[X] = move_inc;
+			add[Y] = 0;
+			add[Z] = 0;
+			add_rel(add, player.theta, acc);
+			//add_rel_pos(move_inc,0,0);
+		}
+		if (jo_is_pad1_key_pressed(JO_KEY_C))
+		{
+			//	Jump
+			add[X] = 0;
+			add[Y] = -(10*gravity[Y]);
+			add[Z] = 0;
+			add_rel(add, player.theta, acc);
+			
+			//	Cheat physics to avoid collision issues
+			player.pos[Y] -= 1<<13;
+			player.pos_next[Y] -= 1<<13;
+		}
+			
+		//	Apply acceleration
+		acc_character(&player, acc);
+	}
+		
+	//	Actions
+	/*
 	if (jo_is_pad1_key_down(JO_KEY_A))
 	{
 		//	Change animation of first object
@@ -122,6 +182,43 @@ void gamepad_input(void)
 			object[0].ani_con.currentAni = 0;
 		}
 	}
+	*/
+	/*
+	if (jo_is_pad1_key_down(JO_KEY_X))
+	{
+		//	Hurt Player
+		player.HealthP = 1;
+		player.StaminaP = 0;
+		player.MagicP = 0;
+		//slPrint("HURT",slLocate(0,20));
+	}
+	*/
+	/*
+	if (jo_is_pad1_key_down(JO_KEY_START) && 
+		jo_is_pad1_key_pressed(JO_KEY_A) &&
+		jo_is_pad1_key_pressed(JO_KEY_B) &&
+		jo_is_pad1_key_pressed(JO_KEY_C) )
+	{
+		
+		//	Reset Height
+		player.pos[X] = 0;
+		player.pos_next[X] = 0;
+		player.pos[Y] = -(1<<0);
+		player.pos_next[Y] = -(1<<0);
+		player.pos[Z] = 0;
+		player.pos_next[Z] = 0;
+		player.vel[X] = 0;
+		player.vel_next[X] = 0;
+		player.vel[Y] = 0;
+		player.vel_next[Y] = 0;
+		player.vel[Z] = 0;
+		player.vel_next[Z] = 0;
+		
+		
+		//	Reset
+		SYS_Exit();
+	}
+	*/
 	
 	//	Update target
 	//forward_target(tar_dist);
@@ -167,13 +264,13 @@ void print_orientation(void)
 	
 	slPrint("  Position     Rotation      Target   ",slLocate(0,2));
 	//	Position
-	slPrintFX(pl_position[X],slLocate(0,3));
-	slPrintFX(pl_position[Y],slLocate(0,4));
-	slPrintFX(pl_position[Z],slLocate(0,5));
+	slPrintFX(player.pos[X],slLocate(0,3));
+	slPrintFX(player.pos[Y],slLocate(0,4));
+	slPrintFX(player.pos[Z],slLocate(0,5));
 	//	Rotation
-	slPrintFX(slAng2FX(theta[X]),slLocate(13,3));
-	slPrintFX(slAng2FX(theta[Y]),slLocate(13,4));
-	slPrintFX(slAng2FX(theta[Z]),slLocate(13,5));
+	slPrintFX(slAng2FX(player.theta[X]),slLocate(13,3));
+	slPrintFX(slAng2FX(player.theta[Y]),slLocate(13,4));
+	slPrintFX(slAng2FX(player.theta[Z]),slLocate(13,5));
 	/*
 	//	Target
 	slPrintFX(target[X],slLocate(26,3));

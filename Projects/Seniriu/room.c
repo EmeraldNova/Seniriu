@@ -14,7 +14,7 @@ XPDATA *pdataRoomMaster[ROOM_NUM_X][ROOM_NUM_Y][ROOM_NUM_Z];
 //	Room container 
 room roomMaster[ROOM_NUM_X][ROOM_NUM_Y][ROOM_NUM_Z];
 //	Current room contianing camera
-int current_room[XYZ];
+//int player.room[XYZ];
 //	Grid spacing
 FIXED room_grid[XYZ];
 //	Total Room Count
@@ -31,11 +31,11 @@ void initialize_rooms(void)
 	*/
 	
 	//	Initialize settings
-	room_grid[X] = slMulFX(10<<16,scale_factor)<<4;
-	room_grid[Y] = slMulFX( 6<<16,scale_factor)<<4;
-	room_grid[Z] = slMulFX(10<<16,scale_factor)<<4;
-	cam_default_height = slMulFX(toFIXED(1.8),scale_factor);
-	move_inc = slMulFX(8000,scale_factor);
+	room_grid[X] = 10<<16;
+	room_grid[Y] = 6<<16;
+	room_grid[Z] = 10<<16;
+	//cam_default_height = toFIXED(1.8);
+	//move_inc = slMulFX(8000,scale_factor);
 	
 	for(int i = 0; i < ROOM_NUM_X; i++)
 	{
@@ -74,9 +74,9 @@ void initialize_rooms(void)
 	room_num = 0;
 	
 	//	Reset Current Room
-	current_room[X] = 0;
-	current_room[Y] = 0;
-	current_room[Z] = 0;
+	player.room[X] = 0;
+	player.room[Y] = 0;
+	player.room[Z] = 0;
 	
 	return;
 }
@@ -211,10 +211,11 @@ void map_rooms(void)
 							pdataRoomMaster[i][j][k],
 							pDataSizes[roomMaster[i][j][k].entity_ID]);
 				*/
+				/*
 				pdataRoomMaster[i][j][k] = (XPDATA*)entities[roomMaster[i][j][k].entity_ID].pol[0];
 							
 				roomMaster[i][j][k].pDataStart = pdataRoomMaster[i][j][k];
-				
+				*/
 				//	Find angle, define opacity
 				roomMaster[i][j][k].theta = 0;
 				switch(roomMaster[i][j][k].entity_ID)
@@ -335,43 +336,10 @@ void draw_rooms(void)
 	//	Print counter
 	int print_line = 7;
 	
-	//	Update current room
-	if(pl_position[X] < -(room_grid[X]>>1) && current_room[X] > 0)
-	{
-		pl_position[X] += room_grid[X];
-		current_room[X]--;
-	}
-	else if(pl_position[X] >= (room_grid[X]>>1) && current_room[X] < ROOM_NUM_X-1)
-	{
-		pl_position[X] -= room_grid[X];
-		current_room[X]++;
-	}
-	if(pl_position[Y] < -(room_grid[Y]>>1) && current_room[Y] < ROOM_NUM_Y-1)
-	{
-		//	Going up 1 floor
-		pl_position[Y] += room_grid[Y];
-		current_room[Y]++;
-	}
-	else if(pl_position[Y] >= (room_grid[Y]>>1) && current_room[Y] > 0)
-	{
-		//	Going down 1 floor
-		pl_position[Y] -= room_grid[Y];
-		current_room[Y]--;
-	}
-	if(pl_position[Z] < -(room_grid[Z]>>1) && current_room[Z] > 0)
-	{
-		pl_position[Z] += room_grid[Z];
-		current_room[Z]--;
-	}
-	else if(pl_position[Z] >= (room_grid[Z]>>1) && current_room[Z] < ROOM_NUM_Z-1)
-	{
-		pl_position[Z] -= room_grid[Z];
-		current_room[Z]++;
-	}
 	//	Print Current Room
 	jo_set_printf_color_index(JO_COLOR_INDEX_Red);
 	//jo_printf(0,print_line++,"Current Room %d,%d,%d",
-	//	current_room[X], current_room[Y], current_room[Z]);
+	//	player.room[X], player.room[Y], player.room[Z]);
 	
 	//	Find visible rooms using integer angles
 	//	ANGLE / 182.04 (4 repeating) = degrees as ints
@@ -393,9 +361,9 @@ void draw_rooms(void)
 				if(roomMaster[i][j][k].alive)
 				{
 					//	Build deltas
-					roomMaster[i][j][k].dist[X] = i - current_room[X];
-					roomMaster[i][j][k].dist[Y] = j - current_room[Y];
-					roomMaster[i][j][k].dist[Z] = k -current_room[Z];
+					roomMaster[i][j][k].dist[X] = i - player.room[X];
+					roomMaster[i][j][k].dist[Y] = j - player.room[Y];
+					roomMaster[i][j][k].dist[Z] = k -player.room[Z];
 					
 					//	Always draw current room
 					if(JO_ABS(roomMaster[i][j][k].dist[X]) +
@@ -409,8 +377,8 @@ void draw_rooms(void)
 						)
 					{
 						if(
-						slAng2FX(theta[Y]) <= 90<<16 ||
-						slAng2FX(theta[Y]) >= 270<<16
+						slAng2FX(player.theta[Y]) <= 90<<16 ||
+						slAng2FX(player.theta[Y]) >= 270<<16
 						)
 						{
 							//	Draw +Z direction
@@ -421,8 +389,8 @@ void draw_rooms(void)
 						}
 						
 						if(
-						slAng2FX(theta[Y]) <= 180<<16 && 
-						slAng2FX(theta[Y]) >= 0<<16
+						slAng2FX(player.theta[Y]) <= 180<<16 && 
+						slAng2FX(player.theta[Y]) >= 0<<16
 						)
 						{
 							//	Draw +X direction
@@ -433,8 +401,8 @@ void draw_rooms(void)
 						}
 						
 						if(
-						slAng2FX(theta[Y]) <= 270<<16 && 
-						slAng2FX(theta[Y]) >= 90<<16
+						slAng2FX(player.theta[Y]) <= 270<<16 && 
+						slAng2FX(player.theta[Y]) >= 90<<16
 						)
 						{
 							//	Draw -Z direction
@@ -445,7 +413,7 @@ void draw_rooms(void)
 						}
 						
 						if(
-						slAng2FX(theta[Y]) >= 180<<16
+						slAng2FX(player.theta[Y]) >= 180<<16
 						)
 						{
 							//	Draw -X direction
@@ -470,11 +438,229 @@ void draw_rooms(void)
 						roomMaster[i][j][k].dist[Z],
 						roomMaster[i][j][k].vis);
 						*/
+						
+						//	Draw Exterior Hulls if within 3 units
+						if(JO_ABS(roomMaster[i][j][k].dist[X]) +
+							JO_ABS(roomMaster[i][j][k].dist[Y]) +
+							JO_ABS(roomMaster[i][j][k].dist[Z]) <= 3)
+						{
+							//	Determine surroundings
+							bool surrounding[3][3] = {
+								{false, false, false},
+								{false, true, false},
+								{false, false, false}
+							};
+							if( (i > 0) && (k > 0) )
+							{
+								//	SouthWest
+								surrounding[0][0] = roomMaster[i-1][j][k-1].alive;
+							}
+							if( (i > 0) )
+							{
+								//	West
+								surrounding[0][1] = roomMaster[i-1][j][k].alive;
+							}
+							if( (i > 0) && (k < ROOM_NUM_Z) )
+							{
+								//	NorthWest
+								surrounding[0][2] = roomMaster[i-1][j][k+1].alive;
+							}
+							if( (k > 0) )
+							{
+								//	South
+								surrounding[1][0] = roomMaster[i][j][k-1].alive;
+							}
+							if( (k < ROOM_NUM_Z) )
+							{
+								//	North
+								surrounding[1][2] = roomMaster[i][j][k+1].alive;
+							}
+							if( (i < ROOM_NUM_X) && (k > 0) )
+							{
+								//	SouthEast
+								surrounding[2][0] = roomMaster[i+1][j][k-1].alive;
+							}
+							if( (i < ROOM_NUM_X) )
+							{
+								//	East
+								surrounding[2][1] = roomMaster[i+1][j][k].alive;
+							}
+							if( (i < ROOM_NUM_X) && (k < ROOM_NUM_Z) )
+							{
+								//	NorthEast
+								surrounding[2][2] = roomMaster[i+1][j][k+1].alive;
+							}
+							
+							
+							//	Draw each manually	
+							
+							//	Purge cache
+							slCashPurge();
+							//	Reset matrix
+							slUnitMatrix(0);
+							//	Advance matrix buffer pointer 1 step
+							slPushMatrix();
+							//	Set Scale
+							slScale((1<<16), (1<<16), (1<<16));
+							//	Rotate perspective for player angle 
+							slRotY(-player.theta[Y]);	
+							//	Translate draw location
+							slTranslate(
+								MODEL_SCALE*(room_grid[X] * roomMaster[i][j][k].dist[X] - player.pos[X]),
+								MODEL_SCALE*(-room_grid[Y] * roomMaster[i][j][k].dist[Y] - player.pos[Y] + cam_height),
+								MODEL_SCALE*(room_grid[Z] * roomMaster[i][j][k].dist[Z] - player.pos[Z]));					
+							bool dummy;
+							
+							//	SouthWest
+							if( (!surrounding[1][0]) && surrounding[0][1] )
+							{
+								//	Straight Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								dummy = false;
+							}
+							if( (!surrounding[1][0]) && surrounding[2][1] )
+							{
+								//	Straight Hull
+								slScale(-(1<<16), (1<<16), (1<<16));
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								slScale(-(1<<16), (1<<16), (1<<16));
+								dummy = false;
+							}
+							if( (!surrounding[1][0]) && (!surrounding[0][1]) )
+							{
+								//	Exterior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 1].pol[0]);
+								dummy = false;
+							}
+							if( surrounding[1][0] && surrounding[0][1] && (!surrounding[0][0]) )
+							{
+								//	Interior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 2].pol[0]);
+								dummy = false;
+							}
+							//	Iterate Rotation
+							slRotY(DEGtoANG(90.0));
+							
+							
+							//	NorthWest
+							if( !surrounding[0][1] && surrounding[1][2] )
+							{
+								//	Straight Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								dummy = false;
+							}
+							if( !surrounding[0][1] && surrounding[1][0] )
+							{
+								//	Straight Hull
+								slScale(-(1<<16), (1<<16), (1<<16));
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								slScale(-(1<<16), (1<<16), (1<<16));
+								dummy = false;
+							}
+							if( !surrounding[1][2] && !surrounding[0][1] )
+							{
+								//	Exterior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 1].pol[0]);
+								dummy = false;
+							}
+							if( surrounding[1][2] && surrounding[0][1] && !surrounding[0][2] )
+							{
+								//	Interior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 2].pol[0]);
+								dummy = false;
+							}
+							
+							//	Iterate Rotation
+							slRotY(DEGtoANG(90.0));
+							
+							//	NorthEast
+							if( !surrounding[1][2] && surrounding[2][1] )
+							{
+								//	Straight Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								dummy = false;
+							}
+							if( !surrounding[1][2] && surrounding[0][1] )
+							{
+								//	Straight Hull
+								slScale(-(1<<16), (1<<16), (1<<16));
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								slScale(-(1<<16), (1<<16), (1<<16));
+								dummy = false;
+							}
+							
+							if( !surrounding[2][1] && !surrounding[1][2] )
+							{
+								//	Exterior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 1].pol[0]);
+								dummy = false;
+							}
+							if( surrounding[1][2] && surrounding[2][1] && !surrounding[2][2] )
+							{
+								//	Interior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 2].pol[0]);
+								dummy = false;
+							}
+							
+							//	Iterate Rotation
+							slRotY(DEGtoANG(90.0));
+							
+							//	SouthEast
+							if( !surrounding[2][1] && surrounding[1][0] )
+							{
+								//	Straight Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								dummy = false;
+							}
+							if( !surrounding[2][1] && surrounding[1][2] )
+							{
+								//	Straight Hull
+								slScale(-(1<<16), (1<<16), (1<<16));
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 0].pol[0]);
+								slScale(-(1<<16), (1<<16), (1<<16));
+								dummy = false;
+							}
+							if( !surrounding[1][0] && !surrounding[2][1] )
+							{
+								//	Exterior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 1].pol[0]);
+								dummy = false;
+							}
+							if( surrounding[1][0] && surrounding[2][1] && !surrounding[2][2] )
+							{
+								//	Interior Hull
+								slPutPolygon((XPDATA*)entities[
+									exter_start + 2].pol[0]);
+								dummy = false;
+							}
+							
+							//	Iterate Rotation
+							slRotY(DEGtoANG(90.0));	
+							
+							//	Return matrix buffer pointer back 1 step
+							slPopMatrix();	
+						}							
 					}
 				}
 			}
 		}
 	}
+	num_vis = JO_MIN(num_vis, MAX_ROOM_DISPLAY);
 	//	Print visible room info
 	/*
 	jo_printf(0,print_line++,"Visible rooms: %d, Max Rooms: %d       ", num_vis, MAX_ROOM_DISPLAY);
@@ -486,17 +672,17 @@ void draw_rooms(void)
 	jo_printf(0,print_line++,"                                        ");
 	jo_printf(0,print_line++,"                                        ");
 	*/
-	num_vis = JO_MIN(num_vis, MAX_ROOM_DISPLAY);
+	
 	
 	//	Generate list of rooms to draw
 	int room_draw_coords[MAX_ROOM_DISPLAY][3];
 	//	Current room
 	int room_draw_count = 0;
-	if(roomMaster[current_room[X]][current_room[Y]][current_room[Z]].vis)
+	if(roomMaster[player.room[X]][player.room[Y]][player.room[Z]].vis)
 	{
-		room_draw_coords[0][0] = current_room[X];
-		room_draw_coords[0][1] = current_room[Y];
-		room_draw_coords[0][2] = current_room[Z];
+		room_draw_coords[0][0] = player.room[X];
+		room_draw_coords[0][1] = player.room[Y];
+		room_draw_coords[0][2] = player.room[Z];
 		room_draw_count++;
 	}
 	//	Loop through rooms
@@ -506,12 +692,12 @@ void draw_rooms(void)
 	while(room_draw_count < num_vis)
 	{
 		//	Find room limits
-		min_room[X] = JO_MAX(current_room[X]-dist_compare, 0);
-		max_room[X] = JO_MIN(current_room[X]+dist_compare, ROOM_NUM_X-1);
-		min_room[Y] = JO_MAX(current_room[Y]-dist_compare, 0);
-		max_room[Y] = JO_MIN(current_room[Y]+dist_compare, ROOM_NUM_Y-1);
-		min_room[Z] = JO_MAX(current_room[Z]-dist_compare, 0);
-		max_room[Z] = JO_MIN(current_room[Z]+dist_compare, ROOM_NUM_Z-1);
+		min_room[X] = JO_MAX(player.room[X]-dist_compare, 0);
+		max_room[X] = JO_MIN(player.room[X]+dist_compare, ROOM_NUM_X-1);
+		min_room[Y] = JO_MAX(player.room[Y]-dist_compare, 0);
+		max_room[Y] = JO_MIN(player.room[Y]+dist_compare, ROOM_NUM_Y-1);
+		min_room[Z] = JO_MAX(player.room[Z]-dist_compare, 0);
+		max_room[Z] = JO_MIN(player.room[Z]+dist_compare, ROOM_NUM_Z-1);
 		
 		//	Full search
 		min_room[X] = 0;
@@ -568,27 +754,28 @@ void draw_rooms(void)
 		slPushMatrix();		//	Advance matrix buffer pointer 1 step
 
 		//	Rotate perspective for player angle 
-		slRotY(-theta[Y]);	
+		slRotY(-player.theta[Y]);	
 		//	Translate draw location
-		slTranslate(room_grid[X] * roomMaster[i][j][k].dist[X] - pl_position[X],
-			-room_grid[Y] * roomMaster[i][j][k].dist[Y] - pl_position[Y] + cam_height,
-			room_grid[Z] * roomMaster[i][j][k].dist[Z] - pl_position[Z]);		
+		slTranslate(
+			MODEL_SCALE*(room_grid[X] * roomMaster[i][j][k].dist[X] - player.pos[X]),
+			MODEL_SCALE*(-room_grid[Y] * roomMaster[i][j][k].dist[Y] - player.pos[Y] + cam_height),
+			MODEL_SCALE*(room_grid[Z] * roomMaster[i][j][k].dist[Z] - player.pos[Z]));		
 		
 		//	Rotate object
 		//slRotY(-roomMaster[i][j][k].theta);	
 		
 		//	Sets scale of 3D draw, larger numbers draw bigger		
-		slScale(scale_factor, scale_factor, scale_factor);	
+		//slScale(scale_factor, scale_factor, scale_factor);	
 		
 		//	Draw Floor
-		slPutPolygon((XPDATA*)entities[0].pol[0]);
+		slPutPolygon((XPDATA*)entities[inter_start].pol[0]);
 		//	Draw Ceiling
-		slPutPolygon((XPDATA*)entities[1].pol[0]);
+		slPutPolygon((XPDATA*)entities[inter_start + 1].pol[0]);
 		
 		//	Draw Corners
 		for(int l = 0; l < 4; l++)
 		{
-			slPutPolygon((XPDATA*)entities[2].pol[0]);
+			slPutPolygon((XPDATA*)entities[inter_start + 2].pol[0]);
 			slRotY(-DEGtoANG(90.0));	
 		}
 		
@@ -600,20 +787,17 @@ void draw_rooms(void)
 			{
 				//	If door or window, draw
 				slPutPolygon((XPDATA*)entities[
-					2+roomMaster[i][j][k].doors[l]
+					inter_start + 2 + roomMaster[i][j][k].doors[l]
 					].pol[0]);
 			}
 			slRotY(DEGtoANG(90.0));	
 		}
 		
-
-		//	Draw Interior	//slPutPolygon((XPDATA*)entities[roomMaster[i][j][k].entity_ID].pol[0]);
-		
-		
 		slPopMatrix();		//	Return matrix buffer pointer back 1 step
 	}
 	
 	//	Draw Skybox
+	/*
 	//	Purge cache
 	slCashPurge();
 	
@@ -625,7 +809,7 @@ void draw_rooms(void)
 	slPushMatrix();		//	Advance matrix buffer pointer 1 step
 
 	//	Rotate perspective for player angle 
-	slRotY(-theta[Y]);	
+	slRotY(-player.theta[Y]);	
 	
 	//	Rotate object
 	slRotY(-roomMaster[i][j][k].theta);	
@@ -636,45 +820,11 @@ void draw_rooms(void)
 	//slPutPolygon((XPDATA*)entities[10].pol[0]);
 	
 	slPopMatrix();		//	Return matrix buffer pointer back 1 step
+	*/
 	
 	return;
 }
 
-void load_rooms(void)
-{
-	/*
-		Load Rooms
-		
-		Loads in entity data from ZTP
-	*/
-	
-	//	Start loading in LWRAM beginning
-    void * currentAddress = (void*)LWRAM;
-	
-	//	Load images
-	
-	//	Load rooms
-	int ID = 0;
-	
-	//	Interiors
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR1W.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR2SW.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR2AW.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR3.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR4.ZTP", currentAddress, ID++, false);
-	
-	//	Exteriors
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR1W_W.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR2SW_W.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR2AW_W.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR3_W.ZTP", currentAddress, ID++, false);
-	currentAddress = ztLoad3Dmodel((Sint8*)"COR4_W.ZTP", currentAddress, ID++, false);
-	
-	//	Skybox
-	currentAddress = ztLoad3Dmodel((Sint8*)"SKY.ZTP", currentAddress, ID++, false);
-	
-	return;
-}
 
 void generate_rooms(void)
 {
@@ -688,27 +838,15 @@ void generate_rooms(void)
 	int position[XYZ];
 	
 	// Room
+	position[X] = 0;
+	position[Y] = 0;
+	position[Z] = 0;
+	create_room(position);
+	
+	// Room
 	position[X] = 1;
 	position[Y] = 0;
-	position[Z] = 1;
-	create_room(position);
-	
-	// Room
-	position[X] = 0;
-	position[Y] = 0;
-	position[Z] = 1;
-	create_room(position);
-	
-	// Room
-	position[X] = 0;
-	position[Y] = 0;
 	position[Z] = 0;
-	create_room(position);
-	
-	// Room
-	position[X] = 2;
-	position[Y] = 0;
-	position[Z] = 1;
 	create_room(position);
 	
 	// Room
@@ -718,25 +856,7 @@ void generate_rooms(void)
 	create_room(position);
 	
 	// Room
-	position[X] = 3;
-	position[Y] = 0;
-	position[Z] = 1;
-	create_room(position);
-	
-	// Room
-	position[X] = 4;
-	position[Y] = 0;
-	position[Z] = 1;
-	create_room(position);
-	
-	// Room
-	position[X] = 5;
-	position[Y] = 0;
-	position[Z] = 1;
-	create_room(position);
-	
-	// Room
-	position[X] = 6;
+	position[X] = 2;
 	position[Y] = 0;
 	position[Z] = 1;
 	create_room(position);
@@ -747,11 +867,10 @@ void generate_rooms(void)
 	position[Z] = 1;
 	create_room(position);
 	
-	
 	// Room
-	position[X] = 1;
+	position[X] = 0;
 	position[Y] = 0;
-	position[Z] = 0;
+	position[Z] = 2;
 	create_room(position);
 	
 	// Room
@@ -761,15 +880,81 @@ void generate_rooms(void)
 	create_room(position);
 	
 	// Room
-	position[X] = 1;
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 2;
+	create_room(position);
+	
+	// Room
+	position[X] = 3;
+	position[Y] = 0;
+	position[Z] = 2;
+	create_room(position);
+	
+	// Room
+	position[X] = 4;
+	position[Y] = 0;
+	position[Z] = 2;
+	create_room(position);
+	
+	// Room
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 2;
+	create_room(position);
+	
+	// Room
+	position[X] = 7;
+	position[Y] = 0;
+	position[Z] = 2;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
 	position[Y] = 0;
 	position[Z] = 3;
 	create_room(position);
 	
 	// Room
-	position[X] = 1;
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 3;
+	create_room(position);
+	
+	// Room
+	position[X] = 6;
+	position[Y] = 0;
+	position[Z] = 3;
+	create_room(position);
+	
+	// Room
+	position[X] = 7;
+	position[Y] = 0;
+	position[Z] = 3;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
 	position[Y] = 0;
 	position[Z] = 4;
+	create_room(position);
+	
+	// Room
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 4;
+	create_room(position);
+	
+	// Room
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 4;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
+	position[Y] = 0;
+	position[Z] = 5;
 	create_room(position);
 	
 	// Room
@@ -779,19 +964,103 @@ void generate_rooms(void)
 	create_room(position);
 	
 	// Room
-	position[X] = 1;
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 6;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 7;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 8;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 9;
+	position[Y] = 0;
+	position[Z] = 5;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
 	position[Y] = 0;
 	position[Z] = 6;
 	create_room(position);
 	
 	// Room
-	position[X] = 1;
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 6;
+	create_room(position);
+	
+	// Room
+	position[X] = 9;
+	position[Y] = 0;
+	position[Z] = 6;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
 	position[Y] = 0;
 	position[Z] = 7;
 	create_room(position);
 	
 	// Room
-	position[X] = 1;
+	position[X] = 2;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 3;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 6;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 7;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 9;
+	position[Y] = 0;
+	position[Z] = 7;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
 	position[Y] = 0;
 	position[Z] = 8;
 	create_room(position);
@@ -799,25 +1068,63 @@ void generate_rooms(void)
 	// Room
 	position[X] = 3;
 	position[Y] = 0;
-	position[Z] = 2;
+	position[Z] = 8;
 	create_room(position);
 	
 	// Room
-	position[X] = 3;
+	position[X] = 5;
 	position[Y] = 0;
-	position[Z] = 3;
+	position[Z] = 8;
+	create_room(position);
+	
+	// Room
+	position[X] = 7;
+	position[Y] = 0;
+	position[Z] = 8;
+	create_room(position);
+	
+	// Room
+	position[X] = 0;
+	position[Y] = 0;
+	position[Z] = 9;
+	create_room(position);
+	
+	// Room
+	position[X] = 1;
+	position[Y] = 0;
+	position[Z] = 9;
 	create_room(position);
 	
 	// Room
 	position[X] = 2;
 	position[Y] = 0;
-	position[Z] = 3;
+	position[Z] = 9;
 	create_room(position);
 	
+	// Room
+	position[X] = 3;
+	position[Y] = 0;
+	position[Z] = 9;
+	create_room(position);
+	
+	// Room
+	position[X] = 4;
+	position[Y] = 0;
+	position[Z] = 9;
+	create_room(position);
+	
+	// Room
+	position[X] = 5;
+	position[Y] = 0;
+	position[Z] = 9;
+	create_room(position);
+	
+	
+	
 	//	Set current room
-	current_room[X] = 1;
-	current_room[Y] = 0;
-	current_room[Z] = 1;
+	player.room[X] = 0;
+	player.room[Y] = 0;
+	player.room[Z] = 0;
 	
 	return;
 }

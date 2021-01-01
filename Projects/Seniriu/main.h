@@ -46,18 +46,15 @@
 #include "room.h"
 #include "bg.h"
 #include "separate_3D.h"
+#include "physics.h"
+#include "character.h"
+#include "item.h"
+#include "loading.h"
 
-/**Functions/variables added by XL2 **/
-/**Added by XL2 to use my own CD loading functions**/
-
-#define     OPEN_MAX    (Sint32)5
-#define     DIR_MAX     (Sint32)25
-GfsDirTbl gfsDirTbl;
-GfsDirName gfsDirName[DIR_MAX];
-Uint32 gfsLibWork[GFS_WORK_SIZE(OPEN_MAX)/sizeof(Uint32)];
-Sint32 gfsDirN;
-
-//	Track loading addresses in LWRAM
-void * currentAddress;
+//	Functions
+void my_draw(void);
+void load_game_objects(void);
+void main_loop(void);
+void jo_main(void);
 
 #endif
